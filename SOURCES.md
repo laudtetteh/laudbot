@@ -62,6 +62,23 @@ When generating responses, LaudBot must:
 
 ---
 
+## System Prompt Convention
+
+LaudBot's system prompt is loaded from `data/approved/system_prompt.md` at request time.
+This file is **gitignored** — it lives on your machine only and is never committed.
+
+To set it up:
+```bash
+cp data/approved/system_prompt.md.example data/approved/system_prompt.md
+# edit system_prompt.md with your approved content
+# restart docker-compose — changes are picked up on next request
+```
+
+The path is configurable via the `SYSTEM_PROMPT_PATH` env var. If the file does not
+exist, the backend falls back to a stub that tells the user LaudBot is not yet configured.
+
+---
+
 ## Source Registry (v2+)
 
 A formal source registry with per-source approval state, ingestion timestamps, and usage tracking will be implemented in a later phase. For now, this document is the policy record.
