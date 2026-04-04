@@ -7,6 +7,7 @@ fix/short-description         # bug fix
 chore/short-description       # tooling, deps, config
 refactor/short-description    # code change with no behaviour change
 docs/short-description        # documentation only
+devops/short-description      # CI/CD, Docker, infra, agentic system
 ```
 
 ## Commit message format (Conventional Commits)
@@ -16,7 +17,7 @@ type(scope): short description
 Optional longer body explaining why, not what.
 ```
 
-Types: `feat` | `fix` | `chore` | `refactor` | `docs` | `test` | `perf`
+Types: `feat` | `fix` | `chore` | `refactor` | `docs` | `test` | `perf` | `devops`
 
 Examples:
 ```
