@@ -5,6 +5,20 @@
 
 ---
 
+## 2026-04-04 — v2-PR6: JWT auth for admin and recruiter invite flow
+
+- backend/app/core/security.py: create_token, decode_token, hash_password, verify_password (PyJWT + passlib/bcrypt)
+- backend/app/core/dependencies.py: get_current_admin, get_current_recruiter FastAPI deps
+- Admin login: POST /api/auth/admin/login → JWT (role: admin)
+- Invite flow: POST /api/admin/invitations (admin-JWT-guarded) → invite URL; POST /api/auth/accept-invite → recruiter JWT with recruiter_id
+- Role separation: admin JWT rejected on /api/chat (403); recruiter JWT rejected on /api/admin/* (403)
+- Recruiter JWT carries recruiter_id for future chat history keying — no refactor needed when persistence lands
+- Frontend: /admin shows login gate; /invite exchanges token param → recruiter JWT → redirect /chat; /chat requires Bearer token, redirects to /invite-required if missing
+- All 8 test paths passed manually
+- PR #29 open — branch: feat/auth
+
+---
+
 ## 2026-04-04 — v2-PR5+: admin UI provider toggle + markdown rendering + model expansion
 
 - GET /api/admin/llm-config + PUT /api/admin/llm-config wired to app.state.llm_config
