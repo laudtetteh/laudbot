@@ -11,6 +11,6 @@ if [ -f "$FILTER" ]; then
 else
   FILE="$1"
   tmp=$(mktemp) || exit 1
-  grep -viE '^[[:space:]]*(co-authored-by|signed-off-by|reviewed-by|acked-by|tested-by|helped-by|on-behalf-of)[[:space:]]*:' "$FILE" | sed 's/\r$//' > "$tmp"
+  grep -viE '^[[:space:]]*(co-authored-by|signed-off-by|reviewed-by|acked-by|tested-by|helped-by|on-behalf-of|made-with)[[:space:]]*:' "$FILE" | sed 's/\r$//' > "$tmp"
   mv "$tmp" "$FILE"
 fi

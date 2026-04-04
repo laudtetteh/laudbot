@@ -12,7 +12,7 @@ cp "$tmp" "$orig"
 if [ -f "$FILTER" ]; then
   sh "$FILTER" "$tmp"
 else
-  grep -viE '^[[:space:]]*(co-authored-by|signed-off-by|reviewed-by|acked-by|tested-by|helped-by|on-behalf-of)[[:space:]]*:' "$tmp" | sed 's/\r$//' > "${tmp}.out"
+  grep -viE '^[[:space:]]*(co-authored-by|signed-off-by|reviewed-by|acked-by|tested-by|helped-by|on-behalf-of|made-with)[[:space:]]*:' "$tmp" | sed 's/\r$//' > "${tmp}.out"
   mv "${tmp}.out" "$tmp"
 fi
 
