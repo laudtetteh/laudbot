@@ -5,6 +5,18 @@
 
 ---
 
+## 2026-04-04 — v2-PR4: system prompt from data/approved/
+
+- prompt.py: load_system_prompt() reads /data/approved/system_prompt.md, falls back to stub
+- chat.py: calls load_system_prompt() per request instead of inline constant
+- docker-compose: ./data:/data mounted on backend service
+- system_prompt.md.example committed as template; copy + fill in to activate LaudBot
+- SOURCES.md + .env.example updated with convention and override docs
+- Verified in-container: fallback and file-load both clean
+- PR #26 open, pending merge -- branch: feat/system-prompt
+
+---
+
 ## 2026-04-04 — v2-PR3: frontend chat UI wired to live backend
 
 - next.config.ts: proxy rewrite /api/* -> backend (server-side, not baked into bundle)
