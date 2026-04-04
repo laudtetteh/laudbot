@@ -48,9 +48,9 @@
 
 ---
 
-## 2026-04-03 — vibe coding system installed
+## 2026-04-03 — agentic coding system installed
 
-- Installed project-level vibe coding system: CLAUDE.md, docs/, rules/, tasks/,
+- Installed project-level agentic coding system: CLAUDE.md, docs/, rules/, tasks/,
   memory/, prompts/, processes/, .claude/commands/, .claude/hooks/
 - Global layer also set up: ~/.claude/CLAUDE.md merged with existing config,
   skills/ populated (refactor, write-tests, code-review, debug, explain)
