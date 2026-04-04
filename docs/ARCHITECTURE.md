@@ -114,6 +114,17 @@ The retrieval layer only indexes content from `data/approved/`. Presence of a fi
 **No direct SDK calls from routes**
 FastAPI routes must never import `anthropic` or `openai` directly. All LLM access goes through the service layer. This is enforced by convention (and eventually linting).
 
+**Next.js proxy rewrite — browser never calls the backend directly**
+The frontend uses a Next.js server-side rewrite (`/api/:path*` → `${BACKEND_URL}/api/:path*`) so the browser only ever talks to the Next.js server. The backend is not publicly exposed. `BACKEND_URL` is a server-side runtime env var — not a `NEXT_PUBLIC_` build-time variable — so a single image works across all environments with no rebuild.
+
+| Environment | `BACKEND_URL` |
+|---|---|
+| Local (bare `npm run dev`) | `http://localhost:8000` |
+| Local (Docker Compose) | `http://backend:8000` (Docker internal DNS) |
+| Production (DO App Platform) | `http://backend` (DO internal service name) |
+
+This gives full local/CI/prod parity, eliminates CORS configuration, and keeps the backend off the public internet.
+
 ---
 
 ## Scaling considerations

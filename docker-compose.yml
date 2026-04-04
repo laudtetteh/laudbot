@@ -20,4 +20,5 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+      - BACKEND_URL=http://backend:8000
     restart: unless-stopped
