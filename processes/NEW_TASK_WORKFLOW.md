@@ -1,85 +1,46 @@
-# Workflow: starting a new task
+# NEW_TASK_WORKFLOW
 
-Follow this exactly at the start of every new task. Do not skip steps.
+> This file is named explicitly so Claude knows to use it only when starting a new task,
+> not during general work.
 
----
+## When to follow this workflow
+- When I say "start a new task" or "let's work on [feature]"
+- When picking up a task from `tasks/backlog/`
 
-## Step 1 — read context
+## Steps
 
-Before touching anything:
+### 1. Orient
+Read these files before anything else:
+- `memory/PROGRESS.md`
+- `memory/ERRORS.md`
+- The task file in `tasks/active/` or `tasks/backlog/`
 
-```
-Read in order:
-1. memory/PROGRESS.md
-2. memory/ERRORS.md
-3. tasks/active/ — check if there's already an active task
-```
+If no task file exists, stop and ask me to create one using `prompts/templates/NEW_TASK.md`.
 
-If there is already an active task, do not start a new one. Finish or explicitly park the active task first.
+### 2. Confirm understanding
+State back to me in 2-3 sentences:
+- What the task is asking for
+- What files you expect to touch
+- Any risks or ambiguities you see
 
----
+Wait for my confirmation.
 
-## Step 2 — identify the task
+### 3. Plan
+Write a numbered implementation plan directly into the task file under `## Approach`.
+Include file-level changes, not just feature-level intent.
+Wait for my approval on the plan before writing code.
 
-State the goal in one sentence. Confirm it maps to an item in:
-- The v1 build plan (PRs 2–7 in README.md), or
-- A file in `tasks/backlog/`, or
-- An explicit user instruction in the current session
+### 4. Implement
+Work through the plan one step at a time.
+After each meaningful step, briefly confirm what was done before moving to the next.
+If you hit something unexpected, pause and surface it — don't silently work around it.
 
-If it doesn't map to any of the above, pause and surface the question before proceeding.
+### 5. Verify
+Run tests if available. Fix failures before declaring done.
+Do a quick self-review: does the output match the acceptance criteria?
 
----
-
-## Step 3 — create the task file
-
-Copy `prompts/templates/NEW_TASK.md` to `tasks/active/TASK_[short-name].md`.
-
-Fill in:
-- **Goal** — one sentence
-- **Context** — which PR / backlog item / decision this relates to
-- **Acceptance criteria** — specific and testable
-- **Approach** — 3–5 bullet points, written before any code
-- **Files likely affected** — list them
-
-Do not start writing code until the task file is filled in.
-
----
-
-## Step 4 — surface risks and open questions
-
-Before proceeding, explicitly state:
-- Any architectural decision this task requires
-- Any files that are off-limits or require care (see CLAUDE.md)
-- Any dependency on work not yet done
-
-Wait for go-ahead if any of these are non-trivial.
-
----
-
-## Step 5 — implement
-
-Follow the approach in the task file. Commit after each logical unit of work — not at the end.
-
-Commit format:
-```
-type(scope): short description
-
-Optional body explaining why.
-```
-
-Reference the GitHub issue number if one exists: `feat(backend): add health endpoint [#3]`
-
----
-
-## Step 6 — ship
-
-When implementation is complete, run `/ship` or follow `processes/SHIP_WORKFLOW.md`.
-
----
-
-## Step 7 — update memory
-
-After shipping:
-1. Update `memory/PROGRESS.md` with a dated entry
-2. Move the task file from `tasks/active/` → `tasks/done/`
-3. Log any new bugs or pitfalls discovered in `memory/ERRORS.md`
+### 6. Wrap up
+- Update `tasks/active/[TASK].md` status to `done`, move file to `tasks/done/`
+- Update `memory/PROGRESS.md` with a one-line summary of what was built
+- Log any new pitfalls in `memory/ERRORS.md`
+- Commit with a conventional commit message referencing the task name

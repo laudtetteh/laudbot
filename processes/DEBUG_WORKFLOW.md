@@ -1,78 +1,44 @@
-# Workflow: debugging
+# DEBUG_WORKFLOW
 
-Run this when something is broken. Do not jump straight to code changes.
+> Follow this when something is broken and the cause isn't obvious.
 
----
+## Steps
 
-## Step 1 — describe the symptom
+### 1. Reproduce first
+Before touching any code, confirm you can reproduce the bug reliably.
+If you can't reproduce it, stop and describe what you tried to me.
 
-State clearly:
-- What you are seeing (exact error message, unexpected behaviour, or wrong output)
-- What you expected to happen
-- Whether it is consistently reproducible
+### 2. Isolate
+Narrow down where the problem is:
+- Which layer: UI / API / database / external service?
+- Which function or module?
+- Does it happen always or only under specific conditions?
 
-Do not form a hypothesis yet. Just describe what you observe.
+State your hypothesis before looking at code.
 
----
+### 3. Inspect — don't guess
+Read the relevant code. Check:
+- What inputs are actually arriving (log them if needed)
+- What the code is actually doing vs what you assumed
+- Whether the bug is in this code or something it calls
 
-## Step 2 — establish what you already know
+### 4. Fix
+Make the smallest possible change that fixes the problem.
+If the fix requires a larger refactor, fix the bug first with a minimal patch,
+then create a separate task for the refactor.
 
-Before investigating:
-- Check `memory/ERRORS.md` — has this happened before?
-- Check recent commits — did anything change that could cause this?
-- Check the relevant task file — were there known risks flagged?
+### 5. Verify the fix
+- Reproduce the original bug scenario — confirm it's gone
+- Run related tests
+- Check for regressions in adjacent functionality
 
----
-
-## Step 3 — form a hypothesis
-
-State your hypothesis in one sentence:
-> "I think X is happening because Y."
-
-If you have more than one hypothesis, rank them by likelihood before testing any.
-
----
-
-## Step 4 — isolate
-
-Narrow down the failure to the smallest possible scope:
-- Which layer? (frontend / backend / service layer / infra)
-- Which file or function?
-- Can you reproduce it with a minimal test case?
-
-Do not modify production code during isolation. Read and inspect only.
-
----
-
-## Step 5 — fix
-
-Once isolated:
-- Make the smallest change that fixes the root cause
-- Do not refactor surrounding code as part of the fix
-- Do not fix unrelated issues discovered during debugging — log them in `memory/ERRORS.md` instead
-
----
-
-## Step 6 — verify
-
-After fixing:
-- Confirm the original symptom is gone
-- Confirm no regressions in related areas
-- If tests exist, run them
-
----
-
-## Step 7 — log it
-
-Add an entry to `memory/ERRORS.md`:
-
-```markdown
-## YYYY-MM-DD [Short title]
-
-**Symptom**: What was observed
-**Root cause**: What was actually wrong
-**Fix**: What change resolved it
-**Watch for**: Related areas that could have the same issue
+### 6. Log it
+Add the bug and root cause to `memory/ERRORS.md` so we don't hit it again.
+Format:
 ```
-
-Even if the fix was simple, log it. Patterns emerge over time.
+## [YYYY-MM-DD] [Short description]
+**Symptom**: What the user/system saw
+**Root cause**: What was actually wrong
+**Fix**: What was changed
+**Watch for**: Any related areas that could have the same issue
+```

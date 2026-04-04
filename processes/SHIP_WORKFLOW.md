@@ -1,108 +1,50 @@
-# Workflow: shipping a task
+# SHIP_WORKFLOW
 
-Run this when a task is complete and ready to commit, push, and PR.
+> Follow this process before merging or deploying anything.
 
----
+## Steps
 
-## Pre-ship checklist
+### 0. Create the GitHub issue first
+Before writing any code or making any commits, create the issue and note the number.
+All commits on this branch must reference it: `feat(scope): description [#N]`.
+**Never commit first and create the issue after** — the issue number must be in the
+commit message, not added retroactively.
 
-Before committing, verify each item:
-
+### 1. Pre-ship checklist
 - [ ] All acceptance criteria in the task file are met
-- [ ] No `console.log`, `print()`, or debug statements left in
-- [ ] No hardcoded secrets, tokens, or credentials
-- [ ] `memory/PROGRESS.md` entry written for this task
-- [ ] Linter passes (when applicable)
-- [ ] Self-reviewed the diff — nothing unexpected in `git diff`
-- [ ] Task file is NOT staged from `tasks/active/` — only commit it after moving to `tasks/done/`
+- [ ] Tests pass locally
+- [ ] No console.logs, debug code, or commented-out code
+- [ ] No hardcoded secrets or env values
+- [ ] Error cases are handled (not just happy path)
+- [ ] If the PR touches Docker, requirements, or the service layer: in-container
+      verification has been run per `rules/verification.md`
+- [ ] `git status --short` checked after any Docker verification step (volume
+      mounts can generate untracked files that must be committed)
 
-Do not proceed if any item is unchecked. Fix it first.
+### 2. Self-review
+Read the full diff. Ask:
+- Does this do what the task asked and nothing more?
+- Is there anything that could break in production that didn't break in dev?
+- Are there any side effects on other features?
 
----
+### 3. Commit
+Use conventional commit format:
+```
+feat(scope): description of what was built
 
-## Step 1 — confirm what's being shipped
-
-State explicitly:
-- Which task file is being closed
-- The commit message you will use
-- Which files are staged
-
-Wait for explicit "go ahead" before committing.
-
----
-
-## Step 2 — commit
-
-```bash
-git add [specific files — never git add -A blindly]
-git commit -m "type(scope): short description"
+References: [TASK_NAME]
 ```
 
-Commit message rules (from `rules/git-conventions.md`):
-- Type: `feat` | `fix` | `chore` | `refactor` | `docs` | `test` | `perf`
-- Scope: the affected layer — `backend`, `frontend`, `infra`, `ai`, `data`
-- Subject: imperative, lowercase, no period
-- Reference GitHub issue if one exists: `[#N]`
+### 4. Update memory
+- Move task file from `tasks/active/` to `tasks/done/`
+- Add entry to `memory/PROGRESS.md`
+- If anything surprised you, add it to `memory/ERRORS.md`
 
----
-
-## Step 3 — push
-
+### 5. Deploy (if applicable)
+[Customise with your actual deploy commands]
 ```bash
-git push origin [branch-name]
-```
-
----
-
-## Step 4 — create the GitHub issue (if not already open)
-
-```bash
-gh issue create \
-  --title "type: description" \
-  --label "type: X,area: Y" \
-  --body "..."
-```
-
-Issue body should follow the appropriate issue template in `.github/ISSUE_TEMPLATE/`.
-
----
-
-## Step 5 — create the PR
-
-```bash
-gh pr create \
-  --title "type(scope): description" \
-  --label "type: X,area: Y" \
-  --body "..."
-```
-
-PR body must follow `.github/PULL_REQUEST_TEMPLATE.md`:
-- Summary (1–3 sentences)
-- Changes (bullet list)
-- Closes #N
-- Test plan
-- Notes
-
----
-
-## Step 6 — move task to done
-
-```bash
-mv tasks/active/TASK_[name].md tasks/done/TASK_[name].md
-```
-
-Fill in the **Done notes** section of the task file before moving it.
-
----
-
-## Step 7 — update memory
-
-Add an entry to `memory/PROGRESS.md`:
-
-```markdown
-## YYYY-MM-DD — [one-line summary]
-
-- [What was built]
-- [Any deviations from the plan]
-- [Follow-up tasks created]
+# example
+npm run build
+# verify build passes before pushing
+git push origin feat/your-branch
 ```
