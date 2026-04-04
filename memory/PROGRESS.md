@@ -5,6 +5,18 @@
 
 ---
 
+## 2026-04-04 — v2-PR2: POST /api/chat with live LLM call
+
+- `POST /api/chat` routes messages through provider_factory -> LLMService.complete()
+- Request accepts optional provider/model override; falls back to app.state.llm_config
+- App state defaults to Claude + claude-opus-4-6 at startup (in-memory, resets on restart)
+- Unknown provider -> 400; SDK errors -> 502 with descriptive message
+- Placeholder system prompt inline; data/approved/ wiring is v2-PR4
+- Verified in-container: 400 + 502 error paths, full stack boots
+- PR #22 open, pending merge -- branch: feat/chat-endpoint
+
+---
+
 ## 2026-04-04 — v2-PR1: real LLM SDKs and provider factory
 
 - `LLMConfig` dataclass added to `base.py` — bundles provider + optional model
