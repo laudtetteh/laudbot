@@ -1,71 +1,111 @@
 # Architecture — LaudBot
 
-> Last updated: 2026-04-04 (scaffold-complete + multi-provider decision). Update this file as architectural decisions are made.
+> Last updated: 2026-04-04 (v2 — auth, live LLM, admin UI complete). Update this file as architectural decisions are made.
 
 ---
 
 ## System overview
 
-LaudBot is a two-service web application: a FastAPI backend that handles API requests and LLM orchestration, and a Next.js frontend that provides the chat and admin interfaces. All AI calls are routed through a provider-agnostic abstraction layer so the LLM provider can be swapped without touching business logic. In the scaffold the LLM layer is stubbed — no live API calls are made. In v2, the admin can toggle between Claude (Anthropic) and OpenAI at runtime via the admin UI.
+LaudBot is a two-service web application: a FastAPI backend that handles API requests and LLM orchestration, and a Next.js frontend that provides the chat and admin interfaces. All AI calls are routed through a provider-agnostic abstraction layer so the LLM provider can be swapped without touching business logic.
+
+Access is invite-only. Recruiters receive an invite link from the admin (Laud). Admins authenticate via username + password → JWT. All protected endpoints validate JWTs via FastAPI dependency injection.
 
 ---
 
 ## Component map
 
 ```
-┌─────────────────────────────────────────────────┐
-│                  Browser                         │
-│                                                  │
-│  ┌──────────────────────────────────────────┐   │
-│  │         Next.js Frontend (port 3001)      │   │
-│  │                                           │   │
-│  │   /          Chat UI       Admin UI       │   │
-│  │   (landing)  /chat         /admin         │   │
-│  └───────────────────┬──────────────────────┘   │
-└──────────────────────│──────────────────────────┘
-                       │ HTTP (REST)
-┌──────────────────────▼──────────────────────────┐
-│           FastAPI Backend (port 8000)            │
-│                                                  │
-│   GET /health                                    │
-│   POST /api/admin/invitations   (stubbed v1)     │
-│   POST /api/auth/accept-invite  (stubbed v1)     │
-│                                                  │
-│   ┌──────────────────────────────────────────┐  │
-│   │          LLM Service Layer               │  │
-│   │   LLMService (abstract base)             │  │
-│   │   ├── ClaudeService  (stub → real v2)    │  │
-│   │   └── OpenAIService  (v2)                │  │
-│   │   provider_factory(provider) → LLMService│  │
-│   └──────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
-                       │ (v2+)
-         ┌─────────────▼──────────────┐
-         │   PostgreSQL + pgvector    │
-         │   - Source registry        │
-         │   - Embeddings             │
-         │   - Sessions / auth        │
-         └────────────────────────────┘
-                ┌──────┴──────┐ (v2+)
-  ┌─────────────▼──────┐  ┌───▼──────────────────┐
-  │  Anthropic API     │  │  OpenAI API           │
-  │  (Claude)          │  │  (GPT-4o / etc.)      │
-  └────────────────────┘  └──────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                        Browser                           │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │          Next.js Frontend (port 3001)              │  │
+│  │                                                    │  │
+│  │  /            /chat          /admin                │  │
+│  │  (landing)    (recruiter,    (admin login gate +   │  │
+│  │               JWT-gated)     controls)             │  │
+│  │                                                    │  │
+│  │  /invite      /invite-required                     │  │
+│  │  (token →     (no-token                            │  │
+│  │   JWT flow)    landing)                            │  │
+│  └───────────────────┬────────────────────────────────┘  │
+└─────────────────────│────────────────────────────────────┘
+                      │ HTTP (REST) — via Next.js proxy rewrite
+┌─────────────────────▼────────────────────────────────────┐
+│              FastAPI Backend (port 8000)                  │
+│                                                          │
+│  GET  /health                                            │
+│                                                          │
+│  Auth (public)                                           │
+│  POST /api/auth/admin/login                              │
+│  POST /api/auth/accept-invite                            │
+│                                                          │
+│  Admin (requires admin JWT)                              │
+│  POST /api/admin/invitations                             │
+│  GET  /api/admin/llm-config                              │
+│  PUT  /api/admin/llm-config                              │
+│                                                          │
+│  Chat (requires recruiter JWT)                           │
+│  POST /api/chat                                          │
+│                                                          │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │                Auth layer (core/)                 │   │
+│  │  security.py     — JWT create/decode, bcrypt      │   │
+│  │  dependencies.py — get_current_admin,             │   │
+│  │                    get_current_recruiter deps      │   │
+│  └──────────────────────────────────────────────────┘   │
+│                                                          │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │              LLM service layer                    │   │
+│  │  LLMService (abstract base)                       │   │
+│  │  ├── ClaudeService  (Anthropic SDK)               │   │
+│  │  └── OpenAIService  (OpenAI SDK)                  │   │
+│  │  provider_factory(LLMConfig) → LLMService         │   │
+│  │  DEFAULT_MODELS / AVAILABLE_MODELS (single source)│   │
+│  └──────────────────────────────────────────────────┘   │
+│                                                          │
+│  ┌──────────────────────────────────────────────────┐   │
+│  │           In-memory app state                     │   │
+│  │  app.state.llm_config    — active provider/model  │   │
+│  │  app.state.invite_tokens — token → invite data    │   │
+│  └──────────────────────────────────────────────────┘   │
+└───────────────────┬──────────────────────────────────────┘
+                    │
+       ┌────────────▼─────────────┐
+       │  data/approved/          │
+       │  system_prompt.md        │
+       │  (gitignored, mounted    │
+       │   via Docker volume)     │
+       └──────────────────────────┘
+              ┌──────┴──────┐
+┌─────────────▼──────┐  ┌───▼──────────────────┐
+│  Anthropic API     │  │  OpenAI API           │
+│  (Claude)          │  │  (GPT-4o / etc.)      │
+└────────────────────┘  └──────────────────────┘
 ```
 
 ---
 
-## Data flow (v2 target — not yet implemented)
+## Request flow — recruiter chat
 
-1. Recruiter sends a message via the `/chat` UI
-2. Frontend POSTs to `POST /api/chat` on the FastAPI backend
-3. Backend validates the session (auth middleware)
-4. Backend queries the retrieval layer — pgvector semantic search over approved source embeddings
-5. Retrieved context is assembled into a prompt
-6. Prompt is passed to `LLMService.complete()` → `ClaudeService` → Anthropic API
-7. Response is returned to the frontend and streamed to the user
+1. Recruiter visits `/invite?token=<invite_token>`
+2. Frontend POSTs to `POST /api/auth/accept-invite` → backend validates token from `app.state.invite_tokens` → returns recruiter JWT containing `recruiter_id`, `role: recruiter`, `invite_id`
+3. Frontend stores JWT in `sessionStorage`, redirects to `/chat`
+4. Recruiter sends a message → frontend POSTs to `/api/chat` with `Authorization: Bearer <recruiter_jwt>`
+5. Backend `get_current_recruiter` dependency decodes JWT, asserts `role == "recruiter"`
+6. `load_system_prompt()` reads `data/approved/system_prompt.md` (or fallback stub)
+7. Active `LLMConfig` (from `app.state.llm_config`) selects provider → `provider_factory` returns correct `LLMService`
+8. `LLMService.complete(system, messages)` calls live LLM API → returns response string
+9. Response returned to frontend as `{ response, provider, model }`
+10. Frontend renders response with `react-markdown` + `remark-gfm`
 
-**v1 data flow**: Steps 3–6 are stubbed. The endpoint structure exists but returns placeholder responses.
+## Request flow — admin
+
+1. Admin visits `/admin` → frontend checks `sessionStorage` for `admin_token`
+2. If missing → login form shown; credentials POSTed to `POST /api/auth/admin/login`
+3. Backend validates against `ADMIN_USERNAME` / `ADMIN_PASSWORD` env vars → returns admin JWT (`role: admin`)
+4. Frontend stores JWT in `sessionStorage`, admin controls become visible
+5. All subsequent admin API calls attach `Authorization: Bearer <admin_jwt>`
 
 ---
 
@@ -73,18 +113,16 @@ LaudBot is a two-service web application: a FastAPI backend that handles API req
 
 | Service | Purpose | Auth method | Status |
 |---------|---------|-------------|--------|
-| Anthropic Claude API | LLM for answer generation (primary) | `ANTHROPIC_API_KEY` env var | v2 |
-| OpenAI API | LLM for answer generation (secondary, admin toggle) | `OPENAI_API_KEY` env var | v2 |
-| PostgreSQL | Persistent storage, source registry, sessions | Connection string env var | v2 |
-| pgvector | Semantic search over approved content | Via PostgreSQL | v2 |
+| Anthropic Claude API | LLM for answer generation (primary) | `ANTHROPIC_API_KEY` env var | ✅ Live |
+| OpenAI API | LLM for answer generation (admin-togglable) | `OPENAI_API_KEY` env var | ✅ Live |
+| PostgreSQL + pgvector | Persistent storage, source registry, chat history | Connection string env var | 🔜 Planned |
 
 ---
 
 ## Local development
 
-All services run via Docker Compose. No external dependencies needed for v1.
-
-```
+```bash
+cp .env.example .env   # fill in API keys and admin credentials
 docker-compose up
 ```
 
@@ -97,44 +135,48 @@ docker-compose up
 ## Key design decisions
 
 **Provider-agnostic LLM layer**
-All LLM calls go through `LLMService` (abstract base class). `ClaudeService` is the first concrete implementation; `OpenAIService` will be the second. Adding a provider means subclassing `LLMService` and registering it in the factory — no route or business logic changes required. The `complete(system, messages)` interface is intentionally Claude-shaped but maps cleanly to OpenAI's Chat Completions API.
+All LLM calls go through `LLMService` (abstract base class). `ClaudeService` and `OpenAIService` are the two concrete implementations. Adding a provider means subclassing `LLMService` and registering it in `provider_factory` — no route or business logic changes. The `complete(system, messages)` interface maps cleanly to both Anthropic and OpenAI SDKs.
 
-**Multi-provider support via admin toggle (v2)**
-The active provider is controlled by a runtime config value, switchable from the admin UI without a redeploy. Both providers use the same knowledge base and system prompt — the toggle is purely about which API receives the call. This supports live A/B quality comparison without diverging product logic.
+**Runtime provider toggle via admin UI**
+The active provider is `app.state.llm_config` — an in-memory `LLMConfig(provider, model)` updated via `PUT /api/admin/llm-config`. Changes take effect on the next chat request with no redeploy. `AVAILABLE_MODELS` in `base.py` is the single source of truth for validation and populates the admin UI dropdown.
 
-```
-provider_factory(provider: str) -> LLMService
-  "claude"  → ClaudeService()
-  "openai"  → OpenAIService()
-```
+**JWT auth with role separation**
+Two roles: `admin` and `recruiter`. Both use the same `security.py` JWT utilities but different `Depends()` guards. An admin JWT is rejected on `/api/chat` (403); a recruiter JWT is rejected on `/api/admin/*` (403). Credentials live in env vars; no user DB needed at this stage.
 
-**Approved-sources-only constraint**
-The retrieval layer only indexes content from `data/approved/`. Presence of a file does not grant permission — approval must be explicit. This is enforced at the data layer, not just by convention.
+**Recruiter JWT carries durable `recruiter_id`**
+When a recruiter accepts an invite, their JWT payload includes a stable UUID `recruiter_id` (tied to the invite). Chat endpoints have this identity available now. When chat history persistence lands, messages are stored keyed to `recruiter_id` — no refactor of the auth layer required.
 
-**No direct SDK calls from routes**
-FastAPI routes must never import `anthropic` or `openai` directly. All LLM access goes through the service layer. This is enforced by convention (and eventually linting).
+**In-memory token stores**
+`app.state.invite_tokens` maps raw invite tokens to invite metadata. This resets on server restart — acceptable for the current stage. When persistence is added, this migrates to a DB table.
+
+**System prompt from `data/approved/system_prompt.md`**
+`load_system_prompt()` reads from `SYSTEM_PROMPT_PATH` env var (default `/data/approved/system_prompt.md`). The file is mounted via Docker volume (`./data:/data`) so it can be edited without a rebuild. Falls back to a minimal stub if the file is missing. The file is gitignored — it contains personal information not appropriate for a public repo.
 
 **Next.js proxy rewrite — browser never calls the backend directly**
-The frontend uses a Next.js server-side rewrite (`/api/:path*` → `${BACKEND_URL}/api/:path*`) so the browser only ever talks to the Next.js server. The backend is not publicly exposed. `BACKEND_URL` is a server-side runtime env var — not a `NEXT_PUBLIC_` build-time variable — so a single image works across all environments with no rebuild.
+The frontend uses a Next.js server-side rewrite (`/api/:path*` → `${BACKEND_URL}/api/:path*`). `BACKEND_URL` is a server-side runtime env var, not a `NEXT_PUBLIC_` build-time variable. A single image works across all environments with no rebuild.
 
 | Environment | `BACKEND_URL` |
 |---|---|
 | Local (bare `npm run dev`) | `http://localhost:8000` |
-| Local (Docker Compose) | `http://backend:8000` (Docker internal DNS) |
-| Production (DO App Platform) | `http://backend` (DO internal service name) |
+| Local (Docker Compose) | `http://backend:8000` |
+| Production (DO App Platform) | `http://backend` |
 
-This gives full local/CI/prod parity, eliminates CORS configuration, and keeps the backend off the public internet.
+**No direct SDK calls from routes**
+FastAPI routes must never import `anthropic` or `openai` directly. All LLM access goes through the service layer.
 
 ---
 
-## Scaling considerations
+## Planned (not yet built)
 
-v1 is a single-instance local deployment. No scale considerations apply yet.
-
-When retrieval is introduced (v2):
-- Embedding generation can be slow — will need async background processing
-- pgvector query performance degrades at very high document counts — may need HNSW index tuning
-- Claude API has rate limits — will need request queuing or backoff
+| Feature | Notes |
+|---|---|
+| PostgreSQL + pgvector | Persistent chat history, source registry, invite storage |
+| Source ingestion pipeline | Index approved files into vector store |
+| Retrieval-augmented generation | Semantic search over approved content at chat time |
+| Invite modes | Per-invite persona selection (recruiter, friend, technical, etc.) with optional mode-switching |
+| Admin invite UI | Generate invite links from the admin page without curl |
+| DO App Platform deployment | CI/CD pipeline pushing images to GHCR, DO auto-deploy on tag |
+| Rate limiting | Required before open/public deployment |
 
 ---
 
@@ -142,8 +184,8 @@ When retrieval is introduced (v2):
 
 | Item | Why it exists | What it would take to fix |
 |------|--------------|--------------------------|
-| Auth is fully stubbed | Scope decision — scaffold only | Implement token flow, session management, httpOnly cookies |
-| No retrieval layer | Requires DB + embedding pipeline not yet built | Add pgvector, ingestion job, retrieval service |
-| LLM layer returns stubs | Claude API not wired in scaffold | Implement `ClaudeService.complete()` with real API call; add `OpenAIService` |
-| No `POST /api/chat` endpoint | No LLM call to route to yet | Add in v2 after LLM integration |
-| No rate limiting | Not needed for local scaffold | Add before any public-facing deployment |
+| In-memory invite token store | No DB yet | Migrate to DB table when persistence lands |
+| Admin credentials in env vars (plaintext) | Simple to start | Hash password at startup or store hashed value |
+| No rate limiting | Not needed for invite-only access | Add before any open/public deployment |
+| Next.js CVEs (next@15.3.0) | Deferred | `npm install next@latest` + test |
+| No retrieval layer | Requires DB + embedding pipeline | Add pgvector, ingestion job, retrieval service |

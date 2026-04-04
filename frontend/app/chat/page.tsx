@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -12,15 +13,27 @@ interface Message {
 }
 
 export default function ChatPage() {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Resolve recruiter token on mount. Redirect to /invite if missing.
+  useEffect(() => {
+    const stored = sessionStorage.getItem("recruiter_token");
+    if (!stored) {
+      router.replace("/invite-required");
+      return;
+    }
+    setToken(stored);
+  }, [router]);
 
   async function sendMessage() {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || loading || !token) return;
 
     const userMessage: Message = { role: "user", content: text };
     const nextMessages = [...messages, userMessage];
@@ -33,11 +46,22 @@ export default function ChatPage() {
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           messages: nextMessages.map(({ role, content }) => ({ role, content })),
         }),
       });
+
+      if (res.status === 401) {
+        // Token expired or invalid — clear and redirect.
+        sessionStorage.removeItem("recruiter_token");
+        sessionStorage.removeItem("recruiter_id");
+        router.replace("/invite-required");
+        return;
+      }
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -68,6 +92,9 @@ export default function ChatPage() {
       sendMessage();
     }
   }
+
+  // Show nothing while token is being resolved (avoids flash).
+  if (token === null) return null;
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col px-6 py-10">

@@ -16,6 +16,11 @@ app.state.llm_config = LLMConfig(
     model=DEFAULT_MODELS["claude"],
 )
 
+# In-memory invite token store.
+# Maps raw invite_token (UUID str) → { invite_id, email, note }.
+# Reset on restart — acceptable for portfolio use.
+app.state.invite_tokens: dict = {}
+
 app.include_router(health_router)
 app.include_router(chat_router)
 app.include_router(admin_config_router)

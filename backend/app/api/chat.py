@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
+from app.core.dependencies import get_current_recruiter
 from app.models.chat import ChatRequest, ChatResponse
 from app.services.llm.base import LLMConfig
 from app.services.llm.factory import provider_factory
@@ -10,7 +11,7 @@ from app.services.prompt import load_system_prompt
 router = APIRouter(prefix="/api")
 
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/chat", response_model=ChatResponse, dependencies=[Depends(get_current_recruiter)])
 async def chat(body: ChatRequest, request: Request) -> ChatResponse:
     """Route a user message through the active LLM provider and return a response.
 
