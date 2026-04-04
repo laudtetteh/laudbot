@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-04-04 — PR 5: Next.js frontend scaffold
+
+- Next.js 15, React 19, TypeScript, Tailwind CSS, PostCSS configured
+- Shell `layout.tsx` with metadata — no pages yet
+- `frontend/Dockerfile` running `next dev` on port 3001
+- `docker-compose.yml` updated — both backend (8000) and frontend (3001) services
+- Verified both services start cleanly together
+- PR #12 open, pending merge — branch: `feat/frontend-scaffold`
+
+---
+
 ## 2026-04-04 — PR 4: abstract LLM service layer with Claude stub
 
 - `LLMService` abstract base class in `backend/app/services/llm/base.py`
