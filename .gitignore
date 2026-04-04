@@ -6,6 +6,8 @@ data/approved/exports/*
 !data/approved/exports/.gitkeep
 data/approved/writeups/*
 !data/approved/writeups/.gitkeep
+# Ignore the live system prompt (personal content) — the .example template is committed
+data/approved/system_prompt.md
 
 # Environment variables
 .env
