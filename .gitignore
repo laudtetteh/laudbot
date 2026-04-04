@@ -45,3 +45,7 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Agentic coding — personal session state (don't commit)
+memory/CONTEXT_SNAPSHOT.md
+prompts/history
