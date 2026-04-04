@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-04-04 — PR 3: stubbed auth endpoints and Pydantic models
+
+- `POST /api/admin/invitations` — spec-compliant stub, returns `not_implemented`
+- `POST /api/auth/accept-invite` — spec-compliant stub, returns `not_implemented`
+- All request/response shapes typed as Pydantic models in `backend/app/models/invitations.py`
+- Added `email-validator` dep for `EmailStr` validation
+- Verified all endpoints live before committing
+- PR #8 open, pending merge — branch: `feat/backend-auth-stub`
+
+---
+
 ## 2026-04-04 — PR 2: FastAPI backend scaffold
 
 - `GET /health` endpoint returning `{"status": "ok", "service": "api"}`
