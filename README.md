@@ -63,21 +63,29 @@ Docker will build both images on first run (takes ~60s). Subsequent starts are f
 | Backend health | http://localhost:8000/health | `{"status":"ok","service":"api"}` |
 | API docs | http://localhost:8000/docs | FastAPI Swagger UI |
 
-### 4. Stop
+### 4. Set up environment variables
+
+Copy the example env file and fill in your API keys:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env`:
+
+| Variable | Required | Where to get it |
+|----------|----------|----------------|
+| `ANTHROPIC_API_KEY` | To use Claude | [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) |
+| `OPENAI_API_KEY` | To use OpenAI | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| `DATABASE_URL` | v2+ only | PostgreSQL connection string — not needed yet |
+
+The app boots without any keys set. Keys are only required when `POST /api/chat` is called.
+
+### 5. Stop
 
 ```bash
 docker-compose down
 ```
-
-### Environment variables
-
-No `.env` file is required to run the scaffold. When v2 wires the real APIs, the following vars will be needed:
-
-| Variable | Purpose |
-|----------|---------|
-| `ANTHROPIC_API_KEY` | Anthropic Claude API key |
-| `OPENAI_API_KEY` | OpenAI API key (optional — for provider toggle) |
-| `DATABASE_URL` | PostgreSQL connection string |
 
 ---
 
