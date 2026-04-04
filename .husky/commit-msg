@@ -1,0 +1,16 @@
+#!/bin/sh
+# Sanitize commit message: strip Cursor / Claude / Copilot trailers and boilerplate footers.
+# See filter-commit-message-inplace.sh for the exact patterns.
+#
+# echo "commit-msg: strip ran" >&2
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+FILTER="${ROOT}/.husky/filter-commit-message-inplace.sh"
+if [ -f "$FILTER" ]; then
+  sh "$FILTER" "$1"
+else
+  FILE="$1"
+  tmp=$(mktemp) || exit 1
+  grep -viE '^[[:space:]]*(co-authored-by|signed-off-by|reviewed-by|acked-by|tested-by|helped-by|on-behalf-of)[[:space:]]*:' "$FILE" | sed 's/\r$//' > "$tmp"
+  mv "$tmp" "$FILE"
+fi

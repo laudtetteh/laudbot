@@ -1,0 +1,25 @@
+#!/bin/sh
+# If the client appended trailers or footers after commit-msg (e.g. git --trailer), amend them away.
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+FILTER="${ROOT}/.husky/filter-commit-message-inplace.sh"
+
+tmp=$(mktemp) || exit 0
+orig=$(mktemp) || exit 0
+git log -1 --format=%B | sed 's/\r$//' > "$tmp"
+cp "$tmp" "$orig"
+
+if [ -f "$FILTER" ]; then
+  sh "$FILTER" "$tmp"
+else
+  grep -viE '^[[:space:]]*(co-authored-by|signed-off-by|reviewed-by|acked-by|tested-by|helped-by|on-behalf-of)[[:space:]]*:' "$tmp" | sed 's/\r$//' > "${tmp}.out"
+  mv "${tmp}.out" "$tmp"
+fi
+
+if cmp -s "$orig" "$tmp"; then
+  rm -f "$orig" "$tmp"
+  exit 0
+fi
+
+git commit --amend -F "$tmp"
+rm -f "$orig" "$tmp"

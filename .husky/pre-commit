@@ -1,0 +1,3 @@
+#!/bin/sh
+# Husky init defaulted to "npm test"; replace with real checks when you add them.
+exit 0
