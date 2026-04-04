@@ -23,6 +23,21 @@ DEFAULT_MODELS: dict[str, str] = {
     "openai": "gpt-4o",
 }
 
+# Available models per provider — used to validate config updates and drive the admin UI.
+AVAILABLE_MODELS: dict[str, list[str]] = {
+    "claude": [
+        "claude-opus-4-6",
+        "claude-sonnet-4-6",
+        "claude-haiku-4-5-20251001",
+    ],
+    "openai": [
+        "gpt-4o",
+        "gpt-4o-mini",
+        "o1",
+        "o1-mini",
+    ],
+}
+
 
 @dataclass
 class LLMConfig:

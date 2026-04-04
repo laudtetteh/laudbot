@@ -15,6 +15,15 @@
 
 ---
 
+## 2026-04-04 — Next.js critical vulnerabilities in next@15.3.0
+
+**Symptom**: `npm audit` reports 1 critical severity vulnerability (multiple CVEs) in next@15.3.0 — cache poisoning, SSRF via middleware, RCE in React flight protocol, and others.
+**Root cause**: Pinned to Next.js 15.3.0; fixes available in 15.5.14+.
+**Fix**: Run `npm install next@latest` in the frontend and rebuild. Deferred to avoid scope creep mid-PR — must be done before any public deployment.
+**Watch for**: Run `npm audit` as part of the pre-deploy checklist. Add to SHIP_WORKFLOW.
+
+---
+
 ## 2026-04-04 — system_prompt.md not gitignored — would have committed personal content
 
 **Symptom**: `data/approved/system_prompt.md` appeared as an unstaged file in Git client after being created, meaning it could have been accidentally committed and pushed to GitHub with personal content.

@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   role: "user" | "assistant";
@@ -94,7 +96,29 @@ export default function ChatPage() {
                   : "bg-zinc-800 text-zinc-200"
               }`}
             >
-              {msg.content}
+              {msg.role === "user" ? (
+                msg.content
+              ) : (
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                    strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+                    em: ({ children }) => <em className="italic">{children}</em>,
+                    ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-1">{children}</ul>,
+                    ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-1">{children}</ol>,
+                    li: ({ children }) => <li>{children}</li>,
+                    h1: ({ children }) => <h1 className="mb-2 text-base font-semibold text-white">{children}</h1>,
+                    h2: ({ children }) => <h2 className="mb-1.5 text-sm font-semibold text-white">{children}</h2>,
+                    h3: ({ children }) => <h3 className="mb-1 text-sm font-medium text-zinc-300">{children}</h3>,
+                    a: ({ href, children }) => <a href={href} className="text-zinc-300 underline hover:text-white" target="_blank" rel="noreferrer">{children}</a>,
+                    code: ({ children }) => <code className="rounded bg-zinc-700 px-1 py-0.5 font-mono text-xs text-zinc-200">{children}</code>,
+                    hr: () => <hr className="my-2 border-zinc-700" />,
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              )}
             </div>
             {msg.role === "assistant" && msg.provider && (
               <span className="text-xs text-zinc-600">
