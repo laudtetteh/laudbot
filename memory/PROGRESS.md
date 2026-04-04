@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-04-04 — PR 6: placeholder pages and nav
+
+- `Nav.tsx` — shared nav rendered on all pages via layout.tsx
+- `app/page.tsx` — landing with description and CTA to /chat
+- `app/chat/page.tsx` — placeholder chat UI (non-functional input)
+- `app/admin/page.tsx` — admin placeholder with planned feature cards
+- All three pages verified 200 via docker compose
+- PR #14 open, pending merge — branch: `feat/frontend-pages`
+
+---
+
 ## 2026-04-04 — PR 5: Next.js frontend scaffold
 
 - Next.js 15, React 19, TypeScript, Tailwind CSS, PostCSS configured
