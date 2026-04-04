@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-04-04 — v2-PR5: admin UI provider toggle
+
+- AVAILABLE_MODELS added to base.py — single source of truth for validation + frontend
+- GET /api/admin/llm-config + PUT /api/admin/llm-config in admin_config.py
+- Admin page rewritten: provider pills, model dropdown, save with feedback
+- System prompt editor noted for future admin feature
+- Verified: GET/PUT/400 clean, state persists within session
+- PR #28 open, pending merge -- branch: feat/admin-llm-toggle
+
+---
+
 ## 2026-04-04 — v2-PR4: system prompt from data/approved/
 
 - prompt.py: load_system_prompt() reads /data/approved/system_prompt.md, falls back to stub
