@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-04-04 — PR 2: FastAPI backend scaffold
+
+- `GET /health` endpoint returning `{"status": "ok", "service": "api"}`
+- `backend/requirements.txt` with pinned deps (fastapi 0.115.12, uvicorn 0.34.0, pydantic 2.11.3)
+- `backend/Dockerfile` using Python 3.12-slim
+- `docker-compose.yml` with backend service on port 8000
+- Verified working locally with docker compose before committing
+- PR #6 open, pending merge — branch: `feat/backend-scaffold`
+
+---
+
 ## 2026-04-03 — vibe coding system installed
 
 - Installed project-level vibe coding system: CLAUDE.md, docs/, rules/, tasks/,
