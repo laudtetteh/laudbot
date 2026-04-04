@@ -32,12 +32,12 @@ LaudBot gives recruiters a conversational interface to ask questions about me an
 
 ## Non-goals
 
-### v1 explicitly excludes
+### Scaffold explicitly excludes
 - Real authentication or session management
 - Database migrations or persistent storage
 - Source ingestion pipeline or embedding pipeline
 - Vector search or retrieval-augmented generation
-- Live Claude API integration (LLM layer is stubbed)
+- Live LLM API integration (LLM layer is stubbed)
 - Admin UI functionality (placeholder only)
 - Background jobs, Redis, or caching
 - Production deployment
@@ -49,28 +49,29 @@ LaudBot gives recruiters a conversational interface to ask questions about me an
 
 ---
 
-## Features — MVP (v1)
+## Features — Scaffold (v0.1.0-scaffold)
 
 | Feature | Description | Priority |
 |---------|-------------|----------|
 | Health endpoint | `GET /health` — basic liveness check | P0 |
 | Stubbed auth | `POST /api/admin/invitations` and `POST /api/auth/accept-invite` — return spec-compliant stubs | P0 |
-| Abstract LLM service | Model-agnostic `LLMService` base class with Claude stub implementation | P0 |
+| Abstract LLM service | Provider-agnostic `LLMService` base class with Claude stub implementation | P0 |
 | Frontend scaffold | Next.js app with `/`, `/chat`, `/admin` placeholder pages and shared nav | P0 |
 | Docker Compose | Backend + frontend services running locally via a single `docker-compose up` | P0 |
 | Approved source structure | `data/approved/` directory structure, gitignored, with documented source policy | P0 |
 
 ---
 
-## Features — post-MVP
+## Features — v2
 
 | Feature | Description | Notes |
 |---------|-------------|-------|
+| Multi-provider LLM | Claude (Anthropic) + OpenAI via provider factory; admin UI toggle to switch at runtime | See decisions log |
 | Real auth | Invitation token flow with session management | Decided before implementation |
+| `POST /api/chat` | Live chat endpoint — passes messages through LLM service layer | Requires live LLM integration |
 | Source ingestion | Pipeline to ingest approved files into vector store | Requires DB + pgvector |
 | Retrieval layer | Semantic search over approved content (pgvector) | Requires ingestion |
-| Live Claude integration | Wire `claude.py` stub to real Anthropic API | After retrieval layer |
-| Admin UI | Content management, source approval, response review | After live AI |
+| Admin UI | Provider toggle, content management, source approval, response review | After live AI |
 | Response evaluation | Traceability, grounding checks, answer quality scoring | Later phase |
 | Privacy filter | Policy-based layer that intercepts and blocks sensitive outputs | Later phase |
 
@@ -114,7 +115,7 @@ Request:
 
 ---
 
-## Success metrics (v1)
+## Success metrics (scaffold)
 
 - App runs locally via `docker-compose up` with no manual steps
 - `GET /health` returns 200
@@ -129,6 +130,8 @@ Request:
 - [ ] Which auth strategy for v2? (JWT, session cookies, magic link)
 - [ ] Which embedding model for the retrieval layer?
 - [ ] How are approved sources formally registered — a DB table, a YAML manifest, or a directory convention?
+- [ ] For multi-provider: should the provider selection persist per-session, or is it a global admin setting?
+- [ ] Which OpenAI model maps to the "default" Claude model for A/B quality comparison?
 
 ---
 
@@ -141,3 +144,5 @@ Request:
 | 2026-03-29 | Invitation-based auth model | Controlled access — only approved recruiters should reach the bot |
 | 2026-03-29 | Repo history as portfolio artifact | Commit/PR sequence should tell a deliberate build story |
 | 2026-04-03 | PostgreSQL + pgvector for v2 DB | pgvector enables semantic search without a separate vector DB service |
+| 2026-04-04 | Multi-provider LLM support (Claude + OpenAI) via admin UI toggle | Enables live A/B comparison of provider output quality; `LLMService` abstraction already makes this a subclass + factory addition; no business logic changes required |
+| 2026-04-04 | "scaffold-complete" replaces "v1" as milestone label | v1 implies usable product — this is a deliberate scaffold. Honest naming reduces confusion and sets correct expectations for anyone reading the repo |

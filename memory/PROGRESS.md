@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-04-04 — PR 7: docs, README, scaffold-complete reframe
+
+- README fully rewritten — full Docker setup and run instructions, scaffold-complete status, v2 roadmap table
+- `docs/PRD.md` — "v1" language replaced with "scaffold", multi-provider decision logged, two new open questions added
+- `docs/ARCHITECTURE.md` — component map updated with `OpenAIService`, provider factory documented, OpenAI API added to external deps, known tech debt updated
+- All 7 scaffold PRs marked done in the build plan checklist
+- PR #16 open, pending merge — branch: `docs/readme`
+- **Scaffold complete. Next: tag `v0.1.0-scaffold` on main, then begin v2 planning**
+
+---
+
 ## 2026-04-04 — PR 6: placeholder pages and nav
 
 - `Nav.tsx` — shared nav rendered on all pages via layout.tsx
