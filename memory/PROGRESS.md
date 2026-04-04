@@ -5,6 +5,18 @@
 
 ---
 
+## 2026-04-04 — v2-PR3: frontend chat UI wired to live backend
+
+- next.config.ts: proxy rewrite /api/* -> backend (server-side, not baked into bundle)
+- BACKEND_URL env var: http://backend:8000 in Docker, http://localhost:8000 for bare dev
+- chat/page.tsx: full client component — messages, loading, error, provider badge
+- Decision: Next.js proxy rewrite over NEXT_PUBLIC_API_URL for parity + DO compatibility
+- Verified: POST localhost:3001/api/chat -> Next.js -> backend -> live LLM response
+- docs/ARCHITECTURE.md + PRD.md updated with proxy rewrite and DO deployment decisions
+- PR #24 open, pending merge -- branch: feat/frontend-chat
+
+---
+
 ## 2026-04-04 — v2-PR2: POST /api/chat with live LLM call
 
 - `POST /api/chat` routes messages through provider_factory -> LLMService.complete()

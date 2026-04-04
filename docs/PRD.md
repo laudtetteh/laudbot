@@ -146,3 +146,5 @@ Request:
 | 2026-04-03 | PostgreSQL + pgvector for v2 DB | pgvector enables semantic search without a separate vector DB service |
 | 2026-04-04 | Multi-provider LLM support (Claude + OpenAI) via admin UI toggle | Enables live A/B comparison of provider output quality; `LLMService` abstraction already makes this a subclass + factory addition; no business logic changes required |
 | 2026-04-04 | "scaffold-complete" replaces "v1" as milestone label | v1 implies usable product — this is a deliberate scaffold. Honest naming reduces confusion and sets correct expectations for anyone reading the repo |
+| 2026-04-04 | Frontend proxies API calls via Next.js rewrite, not direct browser fetch | Avoids build-time URL baking (`NEXT_PUBLIC_`), eliminates CORS config, keeps backend off public internet, enables single image per service across all environments |
+| 2026-04-04 | Deployment target: Digital Ocean App Platform, images from GHCR | Auto-deploy triggered by new image tags pushed to GitHub Container Registry; build in CI, deploy pre-built images (not build-at-deploy-time) |
