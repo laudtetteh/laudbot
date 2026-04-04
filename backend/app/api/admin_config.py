@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
+from app.core.dependencies import get_current_admin
 from app.models.admin import LLMConfigRequest, LLMConfigResponse
 from app.services.llm.base import AVAILABLE_MODELS, LLMConfig
 
 router = APIRouter(prefix="/api/admin")
 
 
-@router.get("/llm-config", response_model=LLMConfigResponse)
+@router.get("/llm-config", response_model=LLMConfigResponse, dependencies=[Depends(get_current_admin)])
 async def get_llm_config(request: Request) -> LLMConfigResponse:
     """Return the currently active LLM provider and model.
 
@@ -26,7 +27,7 @@ async def get_llm_config(request: Request) -> LLMConfigResponse:
     )
 
 
-@router.put("/llm-config", response_model=LLMConfigResponse)
+@router.put("/llm-config", response_model=LLMConfigResponse, dependencies=[Depends(get_current_admin)])
 async def update_llm_config(
     body: LLMConfigRequest,
     request: Request,

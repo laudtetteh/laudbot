@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-04-04 — v2-PR5+: admin UI provider toggle + markdown rendering + model expansion
+
+- GET /api/admin/llm-config + PUT /api/admin/llm-config wired to app.state.llm_config
+- Admin page: provider pills, model dropdown, save with inline feedback
+- AVAILABLE_MODELS expanded: 3 Claude models, 4 OpenAI models
+- react-markdown + remark-gfm: assistant bubbles render bold, lists, code, links
+- Root cause logged: docker anon volume shadowing node_modules on rebuild
+- PR #28 merged — branch: feat/admin-llm-toggle
+
+---
+
 ## 2026-04-04 — v2-PR5: admin UI provider toggle
 
 - AVAILABLE_MODELS added to base.py — single source of truth for validation + frontend

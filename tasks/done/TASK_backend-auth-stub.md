@@ -1,6 +1,6 @@
 # Task: backend-auth-stub
 
-**Status**: `done`
+**Status**: `active`
 **Created**: 2026-04-04
 **Updated**: 2026-04-04
 
@@ -12,12 +12,12 @@ PR 3 of 7 in the v1 build plan. Branch: `feat/backend-auth-stub`.
 See `docs/PRD.md` — API contract (v1): `/api/admin/invitations` and `/api/auth/accept-invite`.
 
 ## Acceptance criteria
-- [x] `POST /api/admin/invitations` returns spec-compliant stub with HTTP 200
-- [x] `POST /api/auth/accept-invite` returns spec-compliant stub with HTTP 200
-- [x] All request and response shapes are defined as Pydantic models
-- [x] Invite token field is named `invite_token` (opaque — no real logic)
-- [x] Both routers are registered under their correct path prefixes in `main.py`
-- [x] No real auth logic, no DB calls, no token generation
+- [ ] `POST /api/admin/invitations` returns spec-compliant stub with HTTP 200
+- [ ] `POST /api/auth/accept-invite` returns spec-compliant stub with HTTP 200
+- [ ] All request and response shapes are defined as Pydantic models
+- [ ] Invite token field is named `invite_token` (opaque — no real logic)
+- [ ] Both routers are registered under their correct path prefixes in `main.py`
+- [ ] No real auth logic, no DB calls, no token generation
 
 ## Approach
 1. Create `backend/app/models/invitations.py` — Pydantic request/response models
@@ -47,6 +47,3 @@ See `docs/PRD.md` — API contract (v1): `/api/admin/invitations` and `/api/auth
 
 ## Blockers
 - None
-
-## Done notes
-All acceptance criteria met. Verified all three endpoints live via docker compose before committing. Added `email-validator` dep for Pydantic `EmailStr` — not in original plan but required. No other deviations.
