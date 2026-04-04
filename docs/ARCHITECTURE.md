@@ -1,12 +1,12 @@
 # Architecture — LaudBot
 
-> Last updated: 2026-04-04. Update this file as architectural decisions are made.
+> Last updated: 2026-04-04 (scaffold-complete + multi-provider decision). Update this file as architectural decisions are made.
 
 ---
 
 ## System overview
 
-LaudBot is a two-service web application: a FastAPI backend that handles API requests and LLM orchestration, and a Next.js frontend that provides the chat and admin interfaces. All AI calls are routed through a model-agnostic abstraction layer so the LLM provider can be swapped without touching business logic. In v1 the LLM layer is stubbed — no live API calls are made.
+LaudBot is a two-service web application: a FastAPI backend that handles API requests and LLM orchestration, and a Next.js frontend that provides the chat and admin interfaces. All AI calls are routed through a provider-agnostic abstraction layer so the LLM provider can be swapped without touching business logic. In the scaffold the LLM layer is stubbed — no live API calls are made. In v2, the admin can toggle between Claude (Anthropic) and OpenAI at runtime via the admin UI.
 
 ---
 
@@ -34,7 +34,9 @@ LaudBot is a two-service web application: a FastAPI backend that handles API req
 │   ┌──────────────────────────────────────────┐  │
 │   │          LLM Service Layer               │  │
 │   │   LLMService (abstract base)             │  │
-│   │   └── ClaudeService (stub → real v2)     │  │
+│   │   ├── ClaudeService  (stub → real v2)    │  │
+│   │   └── OpenAIService  (v2)                │  │
+│   │   provider_factory(provider) → LLMService│  │
 │   └──────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────┘
                        │ (v2+)
@@ -44,11 +46,11 @@ LaudBot is a two-service web application: a FastAPI backend that handles API req
          │   - Embeddings             │
          │   - Sessions / auth        │
          └────────────────────────────┘
-                       │ (v2+)
-         ┌─────────────▼──────────────┐
-         │   Anthropic Claude API     │
-         │   (live in v2, stub in v1) │
-         └────────────────────────────┘
+                ┌──────┴──────┐ (v2+)
+  ┌─────────────▼──────┐  ┌───▼──────────────────┐
+  │  Anthropic API     │  │  OpenAI API           │
+  │  (Claude)          │  │  (GPT-4o / etc.)      │
+  └────────────────────┘  └──────────────────────┘
 ```
 
 ---
@@ -71,7 +73,8 @@ LaudBot is a two-service web application: a FastAPI backend that handles API req
 
 | Service | Purpose | Auth method | Status |
 |---------|---------|-------------|--------|
-| Anthropic Claude API | LLM for answer generation | API key (`ANTHROPIC_API_KEY` env var) | v2 |
+| Anthropic Claude API | LLM for answer generation (primary) | `ANTHROPIC_API_KEY` env var | v2 |
+| OpenAI API | LLM for answer generation (secondary, admin toggle) | `OPENAI_API_KEY` env var | v2 |
 | PostgreSQL | Persistent storage, source registry, sessions | Connection string env var | v2 |
 | pgvector | Semantic search over approved content | Via PostgreSQL | v2 |
 
@@ -93,14 +96,23 @@ docker-compose up
 
 ## Key design decisions
 
-**Model-agnostic LLM layer**
-All LLM calls go through `LLMService` (abstract base). `ClaudeService` is the concrete implementation. Adding a new provider means subclassing `LLMService` — nothing else changes.
+**Provider-agnostic LLM layer**
+All LLM calls go through `LLMService` (abstract base class). `ClaudeService` is the first concrete implementation; `OpenAIService` will be the second. Adding a provider means subclassing `LLMService` and registering it in the factory — no route or business logic changes required. The `complete(system, messages)` interface is intentionally Claude-shaped but maps cleanly to OpenAI's Chat Completions API.
+
+**Multi-provider support via admin toggle (v2)**
+The active provider is controlled by a runtime config value, switchable from the admin UI without a redeploy. Both providers use the same knowledge base and system prompt — the toggle is purely about which API receives the call. This supports live A/B quality comparison without diverging product logic.
+
+```
+provider_factory(provider: str) -> LLMService
+  "claude"  → ClaudeService()
+  "openai"  → OpenAIService()
+```
 
 **Approved-sources-only constraint**
 The retrieval layer only indexes content from `data/approved/`. Presence of a file does not grant permission — approval must be explicit. This is enforced at the data layer, not just by convention.
 
 **No direct SDK calls from routes**
-FastAPI routes must never import `anthropic` directly. All LLM access goes through the service layer. This is enforced by convention (and eventually linting).
+FastAPI routes must never import `anthropic` or `openai` directly. All LLM access goes through the service layer. This is enforced by convention (and eventually linting).
 
 ---
 
@@ -119,7 +131,8 @@ When retrieval is introduced (v2):
 
 | Item | Why it exists | What it would take to fix |
 |------|--------------|--------------------------|
-| Auth is fully stubbed | Scope decision — v1 is scaffold only | Implement token flow, session management, httpOnly cookies |
+| Auth is fully stubbed | Scope decision — scaffold only | Implement token flow, session management, httpOnly cookies |
 | No retrieval layer | Requires DB + embedding pipeline not yet built | Add pgvector, ingestion job, retrieval service |
-| LLM layer returns stubs | Claude API not wired in v1 | Implement `ClaudeService.complete()` with real API call |
-| No rate limiting | Not needed for local v1 | Add before any public-facing deployment |
+| LLM layer returns stubs | Claude API not wired in scaffold | Implement `ClaudeService.complete()` with real API call; add `OpenAIService` |
+| No `POST /api/chat` endpoint | No LLM call to route to yet | Add in v2 after LLM integration |
+| No rate limiting | Not needed for local scaffold | Add before any public-facing deployment |
