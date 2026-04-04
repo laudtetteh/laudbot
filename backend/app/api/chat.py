@@ -5,15 +5,9 @@ from fastapi import APIRouter, HTTPException, Request
 from app.models.chat import ChatRequest, ChatResponse
 from app.services.llm.base import LLMConfig
 from app.services.llm.factory import provider_factory
+from app.services.prompt import load_system_prompt
 
 router = APIRouter(prefix="/api")
-
-# Placeholder system prompt — replaced with data/approved/ content in v2-PR4.
-_SYSTEM_PROMPT = (
-    "You are LaudBot, a professional agent that answers questions about Laud's "
-    "background, projects, skills, and career direction. Answer only from approved "
-    "content. If you don't know something, say so — never guess or fabricate."
-)
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -49,7 +43,7 @@ async def chat(body: ChatRequest, request: Request) -> ChatResponse:
 
     try:
         response_text = await service.complete(
-            system=_SYSTEM_PROMPT,
+            system=load_system_prompt(),
             messages=body.messages,
         )
     except Exception as exc:
