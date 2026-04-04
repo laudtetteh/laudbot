@@ -5,6 +5,19 @@
 
 ---
 
+## 2026-04-04 — v2-PR1: real LLM SDKs and provider factory
+
+- `LLMConfig` dataclass added to `base.py` — bundles provider + optional model
+- `DEFAULT_MODELS` dict centralises default model IDs (`claude-opus-4-6`, `gpt-4o`)
+- `ClaudeService` rewired to Anthropic SDK; lazy client init (no key needed at boot)
+- `OpenAIService` added — real OpenAI Chat Completions; same lazy init pattern
+- `provider_factory(LLMConfig) -> LLMService` in `factory.py`; raises `ValueError` for unknown provider
+- `anthropic==0.40.0`, `openai==1.55.3` pinned in requirements.txt
+- Verified in-container: 5 assertions clean, full stack boots without API keys
+- PR #18 open, pending merge — branch: `feat/llm-multi-provider`
+
+---
+
 ## 2026-04-04 — PR 7: docs, README, scaffold-complete reframe
 
 - README fully rewritten — full Docker setup and run instructions, scaffold-complete status, v2 roadmap table
