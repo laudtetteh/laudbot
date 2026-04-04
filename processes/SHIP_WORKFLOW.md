@@ -14,6 +14,7 @@ Before committing, verify each item:
 - [ ] `memory/PROGRESS.md` entry written for this task
 - [ ] Linter passes (when applicable)
 - [ ] Self-reviewed the diff — nothing unexpected in `git diff`
+- [ ] Task file is NOT staged from `tasks/active/` — only commit it after moving to `tasks/done/`
 
 Do not proceed if any item is unchecked. Fix it first.
 
