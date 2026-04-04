@@ -15,6 +15,15 @@
 
 ---
 
+## 2026-04-04 — system_prompt.md not gitignored — would have committed personal content
+
+**Symptom**: `data/approved/system_prompt.md` appeared as an unstaged file in Git client after being created, meaning it could have been accidentally committed and pushed to GitHub with personal content.
+**Root cause**: `.gitignore` only covered subdirectory contents (`resume/*`, `exports/*`, `writeups/*`) — files sitting directly in `data/approved/` were not ignored.
+**Fix**: Added explicit `data/approved/system_prompt.md` rule to `.gitignore`.
+**Watch for**: Any new file added directly to `data/approved/` (not in a subdirectory). Review `.gitignore` whenever adding new approved content files or categories.
+
+---
+
 ## 2026-04-04 — Task file committed in tasks/active/ before being moved
 
 **Symptom**: `tasks/active/TASK_backend-auth-stub.md` landed in `main` alongside `tasks/done/TASK_backend-auth-stub.md`
