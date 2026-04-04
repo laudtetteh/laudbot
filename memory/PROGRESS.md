@@ -5,6 +5,16 @@
 
 ---
 
+## 2026-04-04 — PR 4: abstract LLM service layer with Claude stub
+
+- `LLMService` abstract base class in `backend/app/services/llm/base.py`
+- `Message` dataclass with `role` and `content` fields
+- `ClaudeService` stub in `backend/app/services/llm/claude.py` — returns placeholder, no SDK
+- Verified in-container: abstract class, subclass relationship, stub output all correct
+- PR #10 open, pending merge — branch: `feat/llm-service-layer`
+
+---
+
 ## 2026-04-04 — PR 3: stubbed auth endpoints and Pydantic models
 
 - `POST /api/admin/invitations` — spec-compliant stub, returns `not_implemented`
