@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -15,6 +15,27 @@ class Message:
 
     role: str
     content: str
+
+
+# Default model IDs used when no override is provided.
+DEFAULT_MODELS: dict[str, str] = {
+    "claude": "claude-opus-4-6",
+    "openai": "gpt-4o",
+}
+
+
+@dataclass
+class LLMConfig:
+    """Selects a provider and model for a single LLM interaction.
+
+    Attributes:
+        provider: The LLM provider — "claude" or "openai".
+        model: The model ID to use. Defaults to the provider's default
+            if not set (resolved in provider_factory).
+    """
+
+    provider: str
+    model: str | None = field(default=None)
 
 
 class LLMService(ABC):
