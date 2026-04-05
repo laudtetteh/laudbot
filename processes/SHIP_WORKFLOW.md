@@ -38,6 +38,7 @@ References: [TASK_NAME]
 ### 4. Update memory
 - Move task file from `tasks/active/` to `tasks/done/`
 - Add entry to `memory/PROGRESS.md`
+- Overwrite `memory/CONTEXT_SNAPSHOT.md` with current state (never delete — always overwrite)
 - If anything surprised you, add it to `memory/ERRORS.md`
 
 ### 5. Deploy (if applicable)
