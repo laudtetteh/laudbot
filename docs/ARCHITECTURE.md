@@ -1,6 +1,6 @@
 # Architecture — LaudBot
 
-> Last updated: 2026-04-04 (v2 — auth, live LLM, admin UI complete). Update this file as architectural decisions are made.
+> Last updated: 2026-04-04 (v3 — DO App Platform deployment pipeline). Update this file as architectural decisions are made.
 
 ---
 
@@ -119,6 +119,36 @@ Access is invite-only. Recruiters receive an invite link from the admin (Laud). 
 
 ---
 
+## Production topology
+
+```
+GitHub (main branch)
+        │ push
+        ▼
+GitHub Actions (deploy.yml)
+  ├── build backend image  → ghcr.io/laudtetteh/laudbot-backend:latest
+  ├── build frontend image → ghcr.io/laudtetteh/laudbot-frontend:latest
+  └── doctl apps create-deployment <DO_APP_ID>
+                │
+                ▼
+    DigitalOcean App Platform (nyc)
+    ┌─────────────────────────────────────────┐
+    │  frontend service  (laudbot-frontend)   │
+    │  port 3001 — Next.js standalone         │
+    │  BACKEND_URL=http://backend             │
+    │               │ internal routing        │
+    │  backend service   (laudbot-backend)    │
+    │  port 8000 — FastAPI/uvicorn            │
+    │  SYSTEM_PROMPT env var (secret)         │
+    └─────────────────────────────────────────┘
+                │
+    laudbot.laudtetteh.io  (Cloudflare DNS-only → DO CNAME)
+```
+
+**System prompt in production:** The `SYSTEM_PROMPT` env var (set as a DO secret) takes priority over the file-based path. `load_system_prompt()` checks the env var first, then falls back to the mounted file (local Docker only), then to an inline stub.
+
+---
+
 ## Local development
 
 ```bash
@@ -164,6 +194,17 @@ The frontend uses a Next.js server-side rewrite (`/api/:path*` → `${BACKEND_UR
 **No direct SDK calls from routes**
 FastAPI routes must never import `anthropic` or `openai` directly. All LLM access goes through the service layer.
 
+**CI/CD via GitHub Actions → GHCR → DO App Platform**
+Every merge to `main` builds production Docker images (`Dockerfile.prod`), pushes them to GHCR as public packages, and triggers a DO App Platform deploy via `doctl`. `GITHUB_TOKEN` (automatic) handles GHCR auth; `DO_API_TOKEN` and `DO_APP_ID` are GitHub Actions secrets. See `docs/DEPLOYMENT.md` for full setup steps.
+
+**Production Dockerfiles are separate from dev**
+`Dockerfile.prod` (backend: no `--reload`; frontend: multi-stage build with `output: standalone`) lives alongside the dev `Dockerfile`. `docker-compose.yml` continues to use the dev Dockerfile — no local workflow changes.
+
+**System prompt resolution order**
+1. `SYSTEM_PROMPT` env var — used in production (DO App Platform secret)
+2. File at `SYSTEM_PROMPT_PATH` / default `/data/approved/system_prompt.md` — used locally via Docker volume mount
+3. Inline stub — ensures the app never crashes
+
 ---
 
 ## Planned (not yet built)
@@ -174,8 +215,8 @@ FastAPI routes must never import `anthropic` or `openai` directly. All LLM acces
 | Source ingestion pipeline | Index approved files into vector store |
 | Retrieval-augmented generation | Semantic search over approved content at chat time |
 | Invite modes | Per-invite persona selection (recruiter, friend, technical, etc.) with optional mode-switching |
-| Admin invite UI | Generate invite links from the admin page without curl |
-| DO App Platform deployment | CI/CD pipeline pushing images to GHCR, DO auto-deploy on tag |
+| Admin invite UI | ✅ Done — PR #32 |
+| DO App Platform deployment | ✅ Done — PR #33 |
 | Rate limiting | Required before open/public deployment |
 
 ---

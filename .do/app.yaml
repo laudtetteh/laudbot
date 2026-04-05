@@ -1,0 +1,80 @@
+name: laudbot
+region: nyc
+
+# ---------------------------------------------------------------------------
+# Services
+# ---------------------------------------------------------------------------
+
+services:
+  # -- Backend (FastAPI) ------------------------------------------------------
+  - name: backend
+    image:
+      registry_type: GHCR
+      registry: laudtetteh
+      repository: laudbot-backend
+      tag: latest
+    http_port: 8000
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    instance_count: 1
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 10
+      period_seconds: 30
+    envs:
+      - key: ANTHROPIC_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: OPENAI_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: ADMIN_USERNAME
+        scope: RUN_TIME
+        type: SECRET
+      - key: ADMIN_PASSWORD
+        scope: RUN_TIME
+        type: SECRET
+      - key: JWT_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: JWT_EXPIRE_HOURS
+        scope: RUN_TIME
+        value: "24"
+      # Full system prompt content — replaces the local volume-mounted file.
+      # Set this in the DO App Platform dashboard under encrypted env vars.
+      - key: SYSTEM_PROMPT
+        scope: RUN_TIME
+        type: SECRET
+      - key: FRONTEND_URL
+        scope: RUN_TIME
+        value: https://laudbot.laudtetteh.io
+
+  # -- Frontend (Next.js) -----------------------------------------------------
+  - name: frontend
+    image:
+      registry_type: GHCR
+      registry: laudtetteh
+      repository: laudbot-frontend
+      tag: latest
+    http_port: 3001
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    instance_count: 1
+    health_check:
+      http_path: /
+      initial_delay_seconds: 15
+      period_seconds: 30
+    envs:
+      - key: NODE_ENV
+        scope: RUN_TIME
+        value: production
+      # Internal DO App Platform service routing — no port needed.
+      - key: BACKEND_URL
+        scope: RUN_TIME
+        value: http://backend
+
+# ---------------------------------------------------------------------------
+# Custom domain
+# ---------------------------------------------------------------------------
+
+domains:
+  - domain: laudbot.laudtetteh.io
+    type: PRIMARY
