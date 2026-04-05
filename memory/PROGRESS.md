@@ -5,6 +5,28 @@
 
 ---
 
+## 2026-04-04 — fix: frontend/public missing in CI (PR #38)
+
+- frontend/public/.gitkeep added — empty dir not tracked by git, causing Dockerfile.prod COPY to fail
+- Logged in ERRORS.md
+
+## 2026-04-04 — fix: useSearchParams Suspense on /invite page (PR #36)
+
+- next build fails in standalone mode without Suspense boundary on useSearchParams
+- Split InviteFlow into inner component, wrapped in Suspense in page export
+- Logged in ERRORS.md
+
+## 2026-04-04 — v3-PR2: DO App Platform deployment pipeline (PR #34)
+
+- GitHub Actions: push to main → build prod images → push to GHCR → trigger DO deploy
+- backend/Dockerfile.prod, frontend/Dockerfile.prod (multi-stage, standalone)
+- .do/app.yaml app spec, next.config.ts output: standalone
+- load_system_prompt() checks SYSTEM_PROMPT env var first (production path)
+- docs/DEPLOYMENT.md created, ARCHITECTURE.md updated
+- LaudBot live at laudbot-ij4cd.ondigitalocean.app + laudbot.laudtetteh.io (DNS pending)
+
+---
+
 ## 2026-04-04 — agentic system: POST_MERGE_WORKFLOW + CONTEXT_SNAPSHOT fixes
 
 - processes/POST_MERGE_WORKFLOW.md created — 7-step post-merge checklist
