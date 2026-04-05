@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-04-04 — feat: chat UX improvements — exit, suggested prompts, mode descriptions (PR #46)
+
+- Exit button in chat header: sessionStorage.clear() → redirect to /
+- Suggested prompt chips in chat empty state (admin-configurable per mode)
+- "I am a…" label above mode pill selector
+- Mode description in switch confirmation dialog
+- New GET /api/chat/prompts endpoint (filtered to recruiter allowed_modes)
+- Admin overlay editor extended with per-mode prompts textarea
+
+---
+
 ## 2026-04-04 — feat: invite modes with per-mode overlays, admin controls, chat UI (PR #42)
 
 - 3 modes: recruiter, coworker, buddy
