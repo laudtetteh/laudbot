@@ -9,6 +9,16 @@
 
 ## Steps
 
+### 0. Confirm working directory
+Before touching any file, identify the main repo root and confirm all edits will go there.
+
+Claude Code sessions run inside `.claude/worktrees/<name>/`. Edits written there are
+**invisible** to the user's git client. Always target the main repo explicitly:
+- Main repo root: `/Users/beaconavenue/code/laudbot/`
+- All Write/Edit tool calls must use absolute paths under the main repo root
+- All `git` commands must use `git -C /Users/beaconavenue/code/laudbot/`
+- Never create branches or write files inside the `.claude/worktrees/` path
+
 ### 1. Orient
 Read these files before anything else:
 - `memory/CONTEXT_SNAPSHOT.md` — rolling state; written at end of every session

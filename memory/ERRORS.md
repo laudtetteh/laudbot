@@ -42,6 +42,15 @@
 
 ---
 
+## 2026-04-05 — All code edits went into the worktree, not the main working tree
+
+**Symptom**: File changes were invisible in Sourcetree and `git status` on the main repo showed nothing. User could not review diffs before committing.
+**Root cause**: Claude Code sessions run inside `.claude/worktrees/<name>/`. File edits made via the Write/Edit tools write to that worktree's working directory, NOT to `/Users/beaconavenue/code/laudbot/`. Branches created in the worktree are also locked there and cannot be checked out in the main tree simultaneously.
+**Fix**: Always work on files under the main repo root (`/Users/beaconavenue/code/laudbot/`). Create branches with `git -C /Users/beaconavenue/code/laudbot checkout -b feat/...`. Never use the worktree path for file edits intended to be reviewed and committed by the user.
+**Watch for**: At session start, confirm which working tree is the "real" one. If `pwd` or the env shows a `.claude/worktrees/` path, all file writes must target the main repo root explicitly.
+
+---
+
 ## 2026-04-04 — Task file committed in tasks/active/ before being moved
 
 **Symptom**: `tasks/active/TASK_backend-auth-stub.md` landed in `main` alongside `tasks/done/TASK_backend-auth-stub.md`
