@@ -15,6 +15,7 @@ from app.models.auth import (
     CreateInvitationRequest,
     CreateInvitationResponse,
 )
+from app.services.email import send_invite_email
 from app.services.llm.base import MODES
 
 admin_router = APIRouter(prefix="/api/admin")
@@ -123,6 +124,14 @@ async def create_invitation(
 
     frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3001")
     invite_url = f"{frontend_url}/invite?token={invite_token}"
+
+    # Send invite email — non-blocking, non-fatal. No-ops if RESEND_API_KEY unset.
+    await send_invite_email(
+        to_email=str(body.email),
+        invite_url=invite_url,
+        mode=body.default_mode,
+        note=body.note,
+    )
 
     return CreateInvitationResponse(
         invite_id=invite_id,

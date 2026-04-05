@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-04-04 — feat: invite modes with per-mode overlays, admin controls, chat UI (PR #42)
+
+- 3 modes: recruiter, coworker, buddy
+- JWT carries allowed_modes, default_mode, can_switch_modes
+- Backend composes base prompt + mode overlay + mode lock on every /api/chat request
+- Admin: invite form with mode config, global toggles, overlay editor
+- Chat: mode badge, pill selector, switching starts new conversation
+- Fix: modesConfig lifted to AdminControls so invite form reflects global toggles in real-time
+
+---
+
 ## 2026-04-04 — fix: frontend/public missing in CI (PR #38)
 
 - frontend/public/.gitkeep added — empty dir not tracked by git, causing Dockerfile.prod COPY to fail
