@@ -38,10 +38,29 @@ function InviteFlow() {
         return res.json();
       })
       .then((data) => {
-        // Store the recruiter JWT in sessionStorage so it persists across
-        // navigation within this tab but not across sessions.
+        // Decode the JWT payload to extract mode fields without a library.
+        // The payload is the second base64url segment — safe to decode client-side
+        // since we only need to read (not verify) our own claims here.
+        let defaultMode = "";
+        let allowedModes: string[] = [];
+        let canSwitchModes = false;
+        try {
+          const payloadB64 = data.access_token.split(".")[1];
+          const decoded = JSON.parse(atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/")));
+          defaultMode = decoded.default_mode ?? "";
+          allowedModes = decoded.allowed_modes ?? [];
+          canSwitchModes = decoded.can_switch_modes ?? false;
+        } catch {
+          // Non-fatal — chat will fall back to default_mode from JWT on server.
+        }
+
+        // Store the recruiter JWT and mode config in sessionStorage so they
+        // persist across navigation within this tab but not across sessions.
         sessionStorage.setItem("recruiter_token", data.access_token);
         sessionStorage.setItem("recruiter_id", data.recruiter_id);
+        sessionStorage.setItem("active_mode", defaultMode);
+        sessionStorage.setItem("allowed_modes", JSON.stringify(allowedModes));
+        sessionStorage.setItem("can_switch_modes", String(canSwitchModes));
         setState("done");
         router.replace("/chat");
       })
