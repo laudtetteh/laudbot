@@ -12,6 +12,12 @@ interface Message {
   model?: string;
 }
 
+const MODE_LABELS: Record<string, string> = {
+  recruiter: "Recruiter",
+  coworker: "Co-worker",
+  buddy: "Buddy",
+};
+
 export default function ChatPage() {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -19,9 +25,13 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [activeMode, setActiveMode] = useState<string>("");
+  const [allowedModes, setAllowedModes] = useState<string[]>([]);
+  const [canSwitchModes, setCanSwitchModes] = useState(false);
+  const [switchConfirm, setSwitchConfirm] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Resolve recruiter token on mount. Redirect to /invite if missing.
+  // Resolve recruiter token and mode config on mount.
   useEffect(() => {
     const stored = sessionStorage.getItem("recruiter_token");
     if (!stored) {
@@ -29,7 +39,28 @@ export default function ChatPage() {
       return;
     }
     setToken(stored);
+    setActiveMode(sessionStorage.getItem("active_mode") ?? "");
+    setAllowedModes(JSON.parse(sessionStorage.getItem("allowed_modes") ?? "[]"));
+    setCanSwitchModes(sessionStorage.getItem("can_switch_modes") === "true");
   }, [router]);
+
+  function handleModeSwitch(mode: string) {
+    if (mode === activeMode) return;
+    if (messages.length > 0) {
+      // Ask for confirmation before clearing conversation.
+      setSwitchConfirm(mode);
+    } else {
+      applyModeSwitch(mode);
+    }
+  }
+
+  function applyModeSwitch(mode: string) {
+    setActiveMode(mode);
+    sessionStorage.setItem("active_mode", mode);
+    setMessages([]);
+    setError(null);
+    setSwitchConfirm(null);
+  }
 
   async function sendMessage() {
     const text = input.trim();
@@ -52,11 +83,11 @@ export default function ChatPage() {
         },
         body: JSON.stringify({
           messages: nextMessages.map(({ role, content }) => ({ role, content })),
+          active_mode: activeMode || undefined,
         }),
       });
 
       if (res.status === 401) {
-        // Token expired or invalid — clear and redirect.
         sessionStorage.removeItem("recruiter_token");
         sessionStorage.removeItem("recruiter_id");
         router.replace("/invite-required");
@@ -98,10 +129,72 @@ export default function ChatPage() {
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col px-6 py-10">
-      <h1 className="mb-1 text-xl font-semibold text-white">Chat</h1>
-      <p className="mb-8 text-sm text-zinc-500">
-        Ask questions about Laud&apos;s background, projects, and experience.
-      </p>
+      {/* Header row: title + mode badge / pill selector */}
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="mb-1 text-xl font-semibold text-white">Chat</h1>
+          <p className="text-sm text-zinc-500">
+            Ask questions about Laud&apos;s background, projects, and experience.
+          </p>
+        </div>
+
+        {/* Mode display */}
+        {activeMode && (
+          <div className="flex flex-col items-end gap-1.5">
+            {canSwitchModes && allowedModes.length > 1 ? (
+              /* Pill selector — only shown when switching is permitted */
+              <div className="flex gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 p-1">
+                {allowedModes.map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => handleModeSwitch(mode)}
+                    className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                      mode === activeMode
+                        ? "bg-zinc-700 text-white"
+                        : "text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    {MODE_LABELS[mode] ?? mode}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              /* Read-only badge */
+              <span className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-400">
+                {MODE_LABELS[activeMode] ?? activeMode}
+              </span>
+            )}
+            <span className="text-xs text-zinc-600">mode</span>
+          </div>
+        )}
+      </div>
+
+      {/* Mode switch confirmation dialog */}
+      {switchConfirm && (
+        <div className="mb-4 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3">
+          <p className="mb-3 text-sm text-zinc-300">
+            Switching to{" "}
+            <span className="font-medium text-white">
+              {MODE_LABELS[switchConfirm] ?? switchConfirm}
+            </span>{" "}
+            mode will start a new conversation. Continue?
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => applyModeSwitch(switchConfirm)}
+              className="rounded-md bg-zinc-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-600"
+            >
+              Yes, start new chat
+            </button>
+            <button
+              onClick={() => setSwitchConfirm(null)}
+              className="text-xs text-zinc-500 hover:text-zinc-300"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Message area */}
       <div className="mb-4 flex h-[28rem] flex-col gap-4 overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 p-4">

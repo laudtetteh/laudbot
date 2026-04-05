@@ -8,6 +8,8 @@ data/approved/writeups/*
 !data/approved/writeups/.gitkeep
 # Ignore the live system prompt (personal content) — the .example template is committed
 data/approved/system_prompt.md
+# Ignore live mode overlay files (personal content) — tracked dir via .gitkeep
+data/approved/overlays/*.md
 
 # Environment variables
 .env

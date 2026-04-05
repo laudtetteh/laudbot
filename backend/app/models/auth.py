@@ -32,6 +32,10 @@ class CreateInvitationRequest(BaseModel):
 
     email: EmailStr
     note: str | None = None
+    # Mode config embedded into the recruiter JWT.
+    allowed_modes: list[str]
+    default_mode: str
+    can_switch_modes: bool = False
 
 
 class CreateInvitationResponse(BaseModel):

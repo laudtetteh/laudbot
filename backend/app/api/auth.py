@@ -15,6 +15,7 @@ from app.models.auth import (
     CreateInvitationRequest,
     CreateInvitationResponse,
 )
+from app.services.llm.base import MODES
 
 admin_router = APIRouter(prefix="/api/admin")
 auth_router = APIRouter(prefix="/api/auth")
@@ -86,14 +87,38 @@ async def create_invitation(
     Returns:
         Invite ID, raw token, email, and full invite URL.
     """
+    enabled_modes: dict[str, bool] = request.app.state.modes_config
+
+    # Validate that all requested modes are valid and globally enabled.
+    invalid = [m for m in body.allowed_modes if m not in MODES]
+    if invalid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown mode(s): {invalid}. Valid modes: {MODES}",
+        )
+    disabled = [m for m in body.allowed_modes if not enabled_modes.get(m, False)]
+    if disabled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Mode(s) are globally disabled: {disabled}",
+        )
+    if body.default_mode not in body.allowed_modes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="default_mode must be one of the allowed_modes",
+        )
+
     invite_id = str(uuid.uuid4())
     invite_token = str(uuid.uuid4())
 
-    # Store token → invite_id mapping for validation at accept-invite time.
+    # Store token → invite data mapping for validation at accept-invite time.
     request.app.state.invite_tokens[invite_token] = {
         "invite_id": invite_id,
         "email": body.email,
         "note": body.note,
+        "allowed_modes": body.allowed_modes,
+        "default_mode": body.default_mode,
+        "can_switch_modes": body.can_switch_modes,
     }
 
     frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3001")
@@ -147,6 +172,9 @@ async def accept_invite(
             "sub": recruiter_id,
             "role": "recruiter",
             "invite_id": invite_data["invite_id"],
+            "allowed_modes": invite_data["allowed_modes"],
+            "default_mode": invite_data["default_mode"],
+            "can_switch_modes": invite_data["can_switch_modes"],
         },
         expire_hours=7 * 24,  # 7 days
     )
