@@ -123,18 +123,19 @@ function LoginForm({ onSuccess }: { onSuccess: (token: string) => void }) {
 
 /**
  * Lets the admin generate an invite link with per-invite mode config.
- * Fetches globally enabled modes to populate the allowed-modes checkbox group.
+ * Receives modesConfig from AdminControls so it stays in sync with global toggles.
  */
 function InviteSection({
   token,
   onSessionExpired,
+  modesConfig,
 }: {
   token: string;
   onSessionExpired: () => void;
+  modesConfig: Record<Mode, boolean> | null;
 }) {
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
-  const [enabledModes, setEnabledModes] = useState<Record<Mode, boolean> | null>(null);
   const [allowedModes, setAllowedModes] = useState<Mode[]>([]);
   const [defaultMode, setDefaultMode] = useState<Mode | "">("");
   const [canSwitch, setCanSwitch] = useState(false);
@@ -143,18 +144,14 @@ function InviteSection({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Fetch which modes are globally enabled to drive the checkbox group.
+  // When a mode gets globally disabled, deselect it from the current selection.
   useEffect(() => {
-    fetch("/api/admin/modes", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(async (res) => {
-        if (res.status === 401) { onSessionExpired(); return; }
-        const data = await res.json();
-        setEnabledModes(data.modes);
-      })
-      .catch(() => {/* non-fatal — form degrades gracefully */});
-  }, [token, onSessionExpired]);
+    if (!modesConfig) return;
+    setAllowedModes((prev) => {
+      const next = prev.filter((m) => modesConfig[m]);
+      return next;
+    });
+  }, [modesConfig]);
 
   function toggleMode(mode: Mode) {
     setAllowedModes((prev) => {
@@ -234,7 +231,7 @@ function InviteSection({
     setErrorMessage(null);
   }
 
-  const globEnabled = (m: Mode) => enabledModes === null || enabledModes[m] !== false;
+  const globEnabled = (m: Mode) => modesConfig === null || modesConfig[m] !== false;
 
   return (
     <section className="mb-10">
@@ -416,35 +413,28 @@ function InviteSection({
 
 /**
  * Shows a toggle per mode to enable/disable it globally.
- * Disabled modes are unavailable in the invite form and rejected server-side.
+ * Receives modesConfig from AdminControls and calls onModesChange on update
+ * so the invite form stays in sync automatically.
  */
 function GlobalModesSection({
   token,
   onSessionExpired,
+  modesConfig,
+  onModesChange,
 }: {
   token: string;
   onSessionExpired: () => void;
+  modesConfig: Record<Mode, boolean> | null;
+  onModesChange: (modes: Record<Mode, boolean>) => void;
 }) {
-  const [modes, setModes] = useState<Record<Mode, boolean> | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch("/api/admin/modes", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(async (res) => {
-        if (res.status === 401) { onSessionExpired(); return; }
-        const data = await res.json();
-        setModes(data.modes);
-      })
-      .catch(() => {/* non-fatal */});
-  }, [token, onSessionExpired]);
-
   async function toggleMode(mode: Mode) {
-    if (!modes) return;
-    const next = { ...modes, [mode]: !modes[mode] };
-    setModes(next);
+    if (!modesConfig) return;
+    const next = { ...modesConfig, [mode]: !modesConfig[mode] };
+    // Optimistic update.
+    onModesChange(next);
     setSaveState("saving");
     setErrorMessage(null);
 
@@ -462,14 +452,14 @@ function GlobalModesSection({
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
 
       const data = await res.json();
-      setModes(data.modes);
+      onModesChange(data.modes);
       setSaveState("saved");
       setTimeout(() => setSaveState("idle"), 2000);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Something went wrong.");
       setSaveState("error");
       // Revert optimistic update.
-      setModes(modes);
+      onModesChange(modesConfig);
     }
   }
 
@@ -482,7 +472,7 @@ function GlobalModesSection({
       </p>
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-        {modes ? (
+        {modesConfig ? (
           <div className="space-y-3">
             {ALL_MODES.map((mode) => (
               <div key={mode} className="flex items-center justify-between">
@@ -491,17 +481,17 @@ function GlobalModesSection({
                   <div
                     onClick={() => toggleMode(mode)}
                     className={`relative h-5 w-9 rounded-full transition-colors ${
-                      modes[mode] ? "bg-zinc-400" : "bg-zinc-700"
+                      modesConfig[mode] ? "bg-zinc-400" : "bg-zinc-700"
                     }`}
                   >
                     <span
                       className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                        modes[mode] ? "translate-x-4" : "translate-x-0.5"
+                        modesConfig[mode] ? "translate-x-4" : "translate-x-0.5"
                       }`}
                     />
                   </div>
                   <span className="text-xs text-zinc-500">
-                    {modes[mode] ? "On" : "Off"}
+                    {modesConfig[mode] ? "On" : "Off"}
                   </span>
                 </label>
               </div>
@@ -536,15 +526,13 @@ function OverlayEditorSection({
 }) {
   const [overlays, setOverlays] = useState<Record<Mode, string>>({
     recruiter: "",
-    friend: "",
-    technical: "",
-    roast: "",
+    coworker: "",
+    buddy: "",
   });
   const [saveStates, setSaveStates] = useState<Record<Mode, SaveState>>({
     recruiter: "idle",
-    friend: "idle",
-    technical: "idle",
-    roast: "idle",
+    coworker: "idle",
+    buddy: "idle",
   });
   const [activeTab, setActiveTab] = useState<Mode>("recruiter");
 
@@ -811,6 +799,21 @@ function LLMProviderSection({
 // ---------------------------------------------------------------------------
 
 function AdminControls({ token, onLogout }: { token: string; onLogout: () => void }) {
+  // Lifted here so InviteSection and GlobalModesSection share one source of truth.
+  const [modesConfig, setModesConfig] = useState<Record<Mode, boolean> | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/modes", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (res) => {
+        if (res.status === 401) { onLogout(); return; }
+        const data = await res.json();
+        setModesConfig(data.modes);
+      })
+      .catch(() => {/* non-fatal */});
+  }, [token, onLogout]);
+
   return (
     <div className="mx-auto max-w-4xl px-6 py-10">
       <div className="mb-10 flex items-center justify-between">
@@ -828,8 +831,8 @@ function AdminControls({ token, onLogout }: { token: string; onLogout: () => voi
         </button>
       </div>
 
-      <InviteSection token={token} onSessionExpired={onLogout} />
-      <GlobalModesSection token={token} onSessionExpired={onLogout} />
+      <InviteSection token={token} onSessionExpired={onLogout} modesConfig={modesConfig} />
+      <GlobalModesSection token={token} onSessionExpired={onLogout} modesConfig={modesConfig} onModesChange={setModesConfig} />
       <OverlayEditorSection token={token} onSessionExpired={onLogout} />
       <LLMProviderSection token={token} onSessionExpired={onLogout} />
 
