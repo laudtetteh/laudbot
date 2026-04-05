@@ -1,11 +1,15 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 type State = "loading" | "error" | "done";
 
-export default function InvitePage() {
+/**
+ * Inner component that uses useSearchParams — must be wrapped in <Suspense>
+ * to satisfy Next.js static generation requirements in standalone output mode.
+ */
+function InviteFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [state, setState] = useState<State>("loading");
@@ -76,5 +80,17 @@ export default function InvitePage() {
         <p className="text-sm text-zinc-400">Redirecting to chat…</p>
       )}
     </div>
+  );
+}
+
+/**
+ * Suspense wrapper required because InviteFlow uses useSearchParams().
+ * Without this, next build fails in standalone output mode.
+ */
+export default function InvitePage() {
+  return (
+    <Suspense>
+      <InviteFlow />
+    </Suspense>
   );
 }
