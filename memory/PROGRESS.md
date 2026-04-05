@@ -5,6 +5,16 @@
 
 ---
 
+## 2026-04-04 — agentic system: POST_MERGE_WORKFLOW + CONTEXT_SNAPSHOT fixes
+
+- processes/POST_MERGE_WORKFLOW.md created — 7-step post-merge checklist
+- NEW_TASK_WORKFLOW + SHIP_WORKFLOW updated to include snapshot reads/writes
+- CLAUDE.md session-start reads corrected; stale TBD run instructions replaced
+- PR #32 also carried these changes alongside the invite UI
+- PR #32 merged — branch: feat/admin-invite-ui
+
+---
+
 ## 2026-04-04 — v3-PR1: admin invite UI
 
 - InviteSection component added to frontend/app/admin/page.tsx
