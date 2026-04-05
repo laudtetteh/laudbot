@@ -8,8 +8,14 @@ interface LLMConfigResponse {
   available_models: Record<string, string[]>;
 }
 
+interface InviteResult {
+  invite_url: string;
+  email: string;
+}
+
 type SaveState = "idle" | "saving" | "saved" | "error";
 type AuthState = "checking" | "unauthenticated" | "authenticated";
+type InviteState = "idle" | "generating" | "done" | "error";
 
 // ---------------------------------------------------------------------------
 // Admin login form
@@ -101,6 +107,171 @@ function LoginForm({ onSuccess }: { onSuccess: (token: string) => void }) {
 }
 
 // ---------------------------------------------------------------------------
+// Invite section — generates a recruiter invite URL
+// ---------------------------------------------------------------------------
+
+/**
+ * InviteSection lets the admin generate a recruiter invite URL without curl.
+ * Calls POST /api/admin/invitations with the admin JWT and displays the
+ * resulting invite URL with a copy-to-clipboard button.
+ */
+function InviteSection({
+  token,
+  onSessionExpired,
+}: {
+  token: string;
+  onSessionExpired: () => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [note, setNote] = useState("");
+  const [inviteState, setInviteState] = useState<InviteState>("idle");
+  const [result, setResult] = useState<InviteResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function handleGenerate(e: React.FormEvent) {
+    e.preventDefault();
+    setInviteState("generating");
+    setErrorMessage(null);
+    setResult(null);
+
+    try {
+      const res = await fetch("/api/admin/invitations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email, note: note || undefined }),
+      });
+
+      if (res.status === 401) {
+        onSessionExpired();
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail ?? `Request failed (${res.status})`);
+      }
+
+      const data = await res.json();
+      setResult({ invite_url: data.invite_url, email: data.email });
+      setInviteState("done");
+      setEmail("");
+      setNote("");
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Something went wrong.");
+      setInviteState("error");
+    }
+  }
+
+  async function handleCopy() {
+    if (!result) return;
+    await navigator.clipboard.writeText(result.invite_url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  }
+
+  function handleReset() {
+    setInviteState("idle");
+    setResult(null);
+    setErrorMessage(null);
+  }
+
+  return (
+    <section className="mb-10">
+      <h2 className="mb-1 text-sm font-medium text-zinc-300">Invite recruiter</h2>
+      <p className="mb-6 text-xs text-zinc-500">
+        Generate a one-time invite link to share with a recruiter. The link
+        grants access to the chat for this session only.
+      </p>
+
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+        {/* Success state — show invite URL */}
+        {inviteState === "done" && result ? (
+          <div className="space-y-4">
+            <p className="text-xs text-zinc-400">
+              Invite link generated for{" "}
+              <span className="font-medium text-zinc-200">{result.email}</span>
+            </p>
+
+            <div className="flex items-stretch gap-2">
+              <input
+                type="text"
+                readOnly
+                value={result.invite_url}
+                className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs text-zinc-300 outline-none"
+              />
+              <button
+                onClick={handleCopy}
+                className="rounded-md bg-zinc-700 px-4 py-2 text-xs font-medium text-white hover:bg-zinc-600 transition-colors"
+              >
+                {copied ? "Copied ✓" : "Copy"}
+              </button>
+            </div>
+
+            <button
+              onClick={handleReset}
+              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              ← Generate another
+            </button>
+          </div>
+        ) : (
+          /* Input form */
+          <form onSubmit={handleGenerate} className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+                Recruiter email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="recruiter@company.com"
+                required
+                disabled={inviteState === "generating"}
+                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+                Note{" "}
+                <span className="font-normal text-zinc-600">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="e.g. Acme Corp — senior eng role"
+                disabled={inviteState === "generating"}
+                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+
+            <div className="flex items-center gap-4 pt-1">
+              <button
+                type="submit"
+                disabled={inviteState === "generating"}
+                className="rounded-md bg-zinc-700 px-5 py-2 text-sm font-medium text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+              >
+                {inviteState === "generating" ? "Generating…" : "Generate invite"}
+              </button>
+
+              {inviteState === "error" && errorMessage && (
+                <span className="text-sm text-red-400">{errorMessage}</span>
+              )}
+            </div>
+          </form>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Admin controls (shown after login)
 // ---------------------------------------------------------------------------
 
@@ -187,6 +358,9 @@ function AdminControls({ token, onLogout }: { token: string; onLogout: () => voi
           Sign out
         </button>
       </div>
+
+      {/* Invite recruiter */}
+      <InviteSection token={token} onSessionExpired={onLogout} />
 
       {/* LLM Provider config */}
       <section className="mb-10">
