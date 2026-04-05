@@ -15,6 +15,15 @@
 
 ---
 
+## 2026-04-04 — useSearchParams() breaks next build in standalone output mode
+
+**Symptom**: `next build` fails with "useSearchParams() should be wrapped in a suspense boundary" on `/invite` page. Build exits with code 1.
+**Root cause**: Enabling `output: "standalone"` in `next.config.ts` causes Next.js to attempt static prerendering of all pages. `useSearchParams()` is dynamic and requires a `<Suspense>` boundary to opt the page out of static generation.
+**Fix**: Split the component using `useSearchParams()` into an inner component, wrap it with `<Suspense>` in the page export.
+**Watch for**: Any future page that uses `useSearchParams()`, `usePathname()` with dynamic params, or other CSR-only hooks. Pattern: inner component uses the hook, outer page exports `<Suspense><Inner /></Suspense>`.
+
+---
+
 ## 2026-04-04 — Next.js critical vulnerabilities in next@15.3.0
 
 **Symptom**: `npm audit` reports 1 critical severity vulnerability (multiple CVEs) in next@15.3.0 — cache poisoning, SSRF via middleware, RCE in React flight protocol, and others.
