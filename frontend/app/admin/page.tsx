@@ -529,7 +529,18 @@ function OverlayEditorSection({
     coworker: "",
     buddy: "",
   });
-  const [saveStates, setSaveStates] = useState<Record<Mode, SaveState>>({
+  const [overlaySaveStates, setOverlaySaveStates] = useState<Record<Mode, SaveState>>({
+    recruiter: "idle",
+    coworker: "idle",
+    buddy: "idle",
+  });
+  // Stored as newline-separated strings for easy textarea editing.
+  const [prompts, setPrompts] = useState<Record<Mode, string>>({
+    recruiter: "",
+    coworker: "",
+    buddy: "",
+  });
+  const [promptSaveStates, setPromptSaveStates] = useState<Record<Mode, SaveState>>({
     recruiter: "idle",
     coworker: "idle",
     buddy: "idle",
@@ -547,41 +558,59 @@ function OverlayEditorSection({
           setOverlays((prev) => ({ ...prev, [mode]: data.overlay }));
         })
         .catch(() => {/* non-fatal */});
+
+      fetch(`/api/admin/modes/${mode}/prompts`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(async (res) => {
+          if (res.status === 401) { onSessionExpired(); return; }
+          const data = await res.json();
+          setPrompts((prev) => ({ ...prev, [mode]: (data.prompts as string[]).join("\n") }));
+        })
+        .catch(() => {/* non-fatal */});
     });
   }, [token, onSessionExpired]);
 
-  async function handleSave(mode: Mode) {
-    setSaveStates((prev) => ({ ...prev, [mode]: "saving" }));
-
+  async function handleSaveOverlay(mode: Mode) {
+    setOverlaySaveStates((prev) => ({ ...prev, [mode]: "saving" }));
     try {
       const res = await fetch(`/api/admin/modes/${mode}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ overlay: overlays[mode] }),
       });
-
       if (res.status === 401) { onSessionExpired(); return; }
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
-
-      setSaveStates((prev) => ({ ...prev, [mode]: "saved" }));
-      setTimeout(
-        () => setSaveStates((prev) => ({ ...prev, [mode]: "idle" })),
-        2500,
-      );
+      setOverlaySaveStates((prev) => ({ ...prev, [mode]: "saved" }));
+      setTimeout(() => setOverlaySaveStates((prev) => ({ ...prev, [mode]: "idle" })), 2500);
     } catch {
-      setSaveStates((prev) => ({ ...prev, [mode]: "error" }));
+      setOverlaySaveStates((prev) => ({ ...prev, [mode]: "error" }));
+    }
+  }
+
+  async function handleSavePrompts(mode: Mode) {
+    setPromptSaveStates((prev) => ({ ...prev, [mode]: "saving" }));
+    const promptList = prompts[mode].split("\n").map((p) => p.trim()).filter(Boolean);
+    try {
+      const res = await fetch(`/api/admin/modes/${mode}/prompts`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ prompts: promptList }),
+      });
+      if (res.status === 401) { onSessionExpired(); return; }
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      setPromptSaveStates((prev) => ({ ...prev, [mode]: "saved" }));
+      setTimeout(() => setPromptSaveStates((prev) => ({ ...prev, [mode]: "idle" })), 2500);
+    } catch {
+      setPromptSaveStates((prev) => ({ ...prev, [mode]: "error" }));
     }
   }
 
   return (
     <section className="mb-10">
-      <h2 className="mb-1 text-sm font-medium text-zinc-300">Mode overlays</h2>
+      <h2 className="mb-1 text-sm font-medium text-zinc-300">Mode overlays &amp; prompts</h2>
       <p className="mb-6 text-xs text-zinc-500">
-        Each overlay is appended to the base system prompt when that mode is active.
-        Leave blank to use only the base prompt.
+        Configure the system prompt overlay and suggested prompts for each mode.
       </p>
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900">
@@ -602,33 +631,65 @@ function OverlayEditorSection({
           ))}
         </div>
 
-        {/* Active mode editor */}
-        <div className="p-6">
-          <textarea
-            value={overlays[activeTab]}
-            onChange={(e) =>
-              setOverlays((prev) => ({ ...prev, [activeTab]: e.target.value }))
-            }
-            placeholder={`Overlay instructions for ${MODE_LABELS[activeTab]} mode…`}
-            rows={8}
-            className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 outline-none focus:border-zinc-500 font-mono"
-          />
+        <div className="space-y-6 p-6">
+          {/* Overlay editor */}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+              System prompt overlay
+            </label>
+            <p className="mb-2 text-xs text-zinc-600">
+              Appended to the base system prompt when this mode is active. Leave blank to use only the base.
+            </p>
+            <textarea
+              value={overlays[activeTab]}
+              onChange={(e) =>
+                setOverlays((prev) => ({ ...prev, [activeTab]: e.target.value }))
+              }
+              placeholder={`Overlay instructions for ${MODE_LABELS[activeTab]} mode…`}
+              rows={7}
+              className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 outline-none focus:border-zinc-500 font-mono"
+            />
+            <div className="mt-2 flex items-center gap-4">
+              <button
+                onClick={() => handleSaveOverlay(activeTab)}
+                disabled={overlaySaveStates[activeTab] === "saving"}
+                className="rounded-md bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+              >
+                {overlaySaveStates[activeTab] === "saving" ? "Saving…" : "Save overlay"}
+              </button>
+              {overlaySaveStates[activeTab] === "saved" && <span className="text-xs text-emerald-400">✓ Saved</span>}
+              {overlaySaveStates[activeTab] === "error" && <span className="text-xs text-red-400">Save failed</span>}
+            </div>
+          </div>
 
-          <div className="mt-3 flex items-center gap-4">
-            <button
-              onClick={() => handleSave(activeTab)}
-              disabled={saveStates[activeTab] === "saving"}
-              className="rounded-md bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
-            >
-              {saveStates[activeTab] === "saving" ? "Saving…" : "Save overlay"}
-            </button>
-
-            {saveStates[activeTab] === "saved" && (
-              <span className="text-xs text-emerald-400">✓ Saved</span>
-            )}
-            {saveStates[activeTab] === "error" && (
-              <span className="text-xs text-red-400">Save failed — try again</span>
-            )}
+          {/* Suggested prompts editor */}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+              Suggested prompts
+            </label>
+            <p className="mb-2 text-xs text-zinc-600">
+              One prompt per line. Shown as clickable chips in the chat empty state.
+            </p>
+            <textarea
+              value={prompts[activeTab]}
+              onChange={(e) =>
+                setPrompts((prev) => ({ ...prev, [activeTab]: e.target.value }))
+              }
+              placeholder={`e.g. What's Laud's engineering background?\nWhat kind of roles is he looking for?`}
+              rows={4}
+              className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 outline-none focus:border-zinc-500"
+            />
+            <div className="mt-2 flex items-center gap-4">
+              <button
+                onClick={() => handleSavePrompts(activeTab)}
+                disabled={promptSaveStates[activeTab] === "saving"}
+                className="rounded-md bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+              >
+                {promptSaveStates[activeTab] === "saving" ? "Saving…" : "Save prompts"}
+              </button>
+              {promptSaveStates[activeTab] === "saved" && <span className="text-xs text-emerald-400">✓ Saved</span>}
+              {promptSaveStates[activeTab] === "error" && <span className="text-xs text-red-400">Save failed</span>}
+            </div>
           </div>
         </div>
       </div>
