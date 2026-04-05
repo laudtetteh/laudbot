@@ -5,6 +5,32 @@
 
 ---
 
+## 2026-04-05 — fix: chat header pill and CTA alignment on mobile (PR #51)
+
+- Mode pills, "I am a…" label, and Exit CTA were wrapping to a right-aligned second line on narrow viewports
+- Fixed by replacing `flex-wrap justify-between` header with `flex-col` on mobile / `sm:flex-row sm:justify-between` on desktop
+- Controls row uses `flex-row items-center justify-between` on mobile — pills left, Exit right on one line
+- 6-line CSS-only change, no logic touched — confirmed no regressions
+- Issue #50, PR #51, merged same session
+
+---
+
+## 2026-04-05 — feat: v4 UI polish — animations, responsive layout, styled chat, admin improvements (PR #49)
+
+- Custom Tailwind keyframes: `fadeIn`, `fadeInUp`, `slideDown`, `scaleIn`, `typingDot`
+- `html`/`body` `h-full` + `flex-col` scaffold → chat page fills full viewport, no fixed height
+- Glassmorphism nav: `backdrop-blur-md bg-zinc-950/80`, `usePathname` active link highlight, mobile hamburger with `animate-slide-down` dropdown
+- Hero: radial glow gradient (indigo + violet), staggered `animate-fade-in-up` entrance, responsive `text-4xl sm:text-5xl lg:text-6xl`
+- Chat: user bubbles `bg-zinc-100 text-zinc-900` / assistant `bg-zinc-800/80` with border, animated three-dot typing indicator, per-mode suggested prompts, message area + input dim/lock behind mode-switch dialog
+- Admin: `SectionHeader` + `Card` shared primitives; allowed modes auto-check and lock when only one globally enabled; default mode auto-set and disabled when ≤1 mode; per-mode `PROMPT_PLACEHOLDERS`
+- Invite + invite-required: centered card layout, CSS spinner, error icon
+- Worktree footgun caught and fixed mid-PR — logged in ERRORS.md, NEW_TASK_WORKFLOW.md step 0, `~/.claude/CLAUDE.md` hard rule #11
+- Issue #48, PR #49, merged
+
+---
+
+---
+
 ## 2026-04-04 — feat: chat UX improvements — exit, suggested prompts, mode descriptions (PR #46)
 
 - Exit button in chat header: sessionStorage.clear() → redirect to /
