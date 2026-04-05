@@ -31,6 +31,31 @@ const MODE_LABELS: Record<Mode, string> = {
 };
 
 // ---------------------------------------------------------------------------
+// Shared primitives
+// ---------------------------------------------------------------------------
+
+/** Section header with title + optional description */
+function SectionHeader({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="mb-5">
+      <h2 className="text-sm font-semibold text-zinc-200">{title}</h2>
+      {description && (
+        <p className="mt-1 text-xs leading-relaxed text-zinc-500">{description}</p>
+      )}
+    </div>
+  );
+}
+
+/** Consistent card wrapper */
+function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`rounded-xl border border-zinc-800/70 bg-zinc-900/60 p-5 sm:p-6 ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Admin login form
 // ---------------------------------------------------------------------------
 
@@ -68,51 +93,59 @@ function LoginForm({ onSuccess }: { onSuccess: (token: string) => void }) {
   }
 
   return (
-    <div className="mx-auto max-w-sm px-6 py-24">
-      <h1 className="mb-1 text-xl font-semibold text-white">Admin login</h1>
-      <p className="mb-8 text-sm text-zinc-500">
-        Owner-only access. Enter your credentials to continue.
-      </p>
+    <div className="flex flex-1 items-center justify-center px-6 py-16">
+      <div className="w-full max-w-sm animate-fade-in-up">
+        <h1 className="mb-1 text-xl font-semibold text-white">Admin login</h1>
+        <p className="mb-8 text-sm text-zinc-500">
+          Owner-only access. Enter your credentials to continue.
+        </p>
 
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-zinc-400">
-            Username
-          </label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
-            required
-            className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-600"
-          />
-        </div>
+        <Card>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+                Username
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+                required
+                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-4 py-2.5 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500"
+              />
+            </div>
 
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-zinc-400">
-            Password
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-            className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-600"
-          />
-        </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-4 py-2.5 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500"
+              />
+            </div>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+            {error && (
+              <p className="rounded-lg border border-red-900/60 bg-red-950/60 px-3 py-2 text-xs text-red-400">
+                {error}
+              </p>
+            )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-zinc-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
-        >
-          {loading ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg bg-zinc-100 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-all hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -144,13 +177,21 @@ function InviteSection({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // When a mode gets globally disabled, deselect it from the current selection.
+  // Sync allowed modes with global mode config.
+  // - Remove any mode that has been globally disabled.
+  // - If exactly one mode is globally enabled, auto-select it and set it as default.
   useEffect(() => {
     if (!modesConfig) return;
-    setAllowedModes((prev) => {
-      const next = prev.filter((m) => modesConfig[m]);
-      return next;
-    });
+    const globallyEnabled = ALL_MODES.filter((m) => modesConfig[m]);
+    if (globallyEnabled.length === 1) {
+      setAllowedModes(globallyEnabled);
+      setDefaultMode(globallyEnabled[0]);
+    } else {
+      setAllowedModes((prev) => prev.filter((m) => modesConfig[m]));
+      setDefaultMode((prev) =>
+        prev && modesConfig[prev as Mode] ? prev : ""
+      );
+    }
   }, [modesConfig]);
 
   function toggleMode(mode: Mode) {
@@ -158,8 +199,12 @@ function InviteSection({
       const next = prev.includes(mode)
         ? prev.filter((m) => m !== mode)
         : [...prev, mode];
-      // Clear default if it was deselected.
-      if (!next.includes(defaultMode as Mode)) setDefaultMode("");
+      // Auto-select default when only one mode remains; clear if current default was removed.
+      if (next.length === 1) {
+        setDefaultMode(next[0]);
+      } else if (!next.includes(defaultMode as Mode)) {
+        setDefaultMode("");
+      }
       return next;
     });
   }
@@ -234,16 +279,15 @@ function InviteSection({
   const globEnabled = (m: Mode) => modesConfig === null || modesConfig[m] !== false;
 
   return (
-    <section className="mb-10">
-      <h2 className="mb-1 text-sm font-medium text-zinc-300">Send invite</h2>
-      <p className="mb-6 text-xs text-zinc-500">
-        Generate a one-time invite link. Choose which modes the recipient can access
-        and whether they can switch modes during their session.
-      </p>
+    <section className="mb-8">
+      <SectionHeader
+        title="Send invite"
+        description="Generate a one-time invite link. Choose which modes the recipient can access and whether they can switch modes during their session."
+      />
 
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+      <Card>
         {inviteState === "done" && result ? (
-          <div className="space-y-4">
+          <div className="animate-fade-in space-y-4">
             <p className="text-xs text-zinc-400">
               Invite link generated for{" "}
               <span className="font-medium text-zinc-200">{result.email}</span>
@@ -254,11 +298,11 @@ function InviteSection({
                 type="text"
                 readOnly
                 value={result.invite_url}
-                className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs text-zinc-300 outline-none"
+                className="flex-1 rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2 text-xs text-zinc-300 outline-none"
               />
               <button
                 onClick={handleCopy}
-                className="rounded-md bg-zinc-700 px-4 py-2 text-xs font-medium text-white hover:bg-zinc-600 transition-colors"
+                className="rounded-lg bg-zinc-700 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-zinc-600"
               >
                 {copied ? "Copied ✓" : "Copy"}
               </button>
@@ -266,7 +310,7 @@ function InviteSection({
 
             <button
               onClick={handleReset}
-              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+              className="text-xs text-zinc-500 transition-colors hover:text-zinc-300"
             >
               ← Generate another
             </button>
@@ -285,7 +329,7 @@ function InviteSection({
                 placeholder="recruiter@company.com"
                 required
                 disabled={inviteState === "generating"}
-                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2.5 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 sm:max-w-sm"
               />
             </div>
 
@@ -301,7 +345,7 @@ function InviteSection({
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="e.g. Acme Corp — senior eng role"
                 disabled={inviteState === "generating"}
-                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2.5 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 sm:max-w-sm"
               />
             </div>
 
@@ -310,27 +354,32 @@ function InviteSection({
               <label className="mb-2 block text-xs font-medium text-zinc-400">
                 Allowed modes
               </label>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 {ALL_MODES.map((mode) => {
                   const isEnabled = globEnabled(mode);
                   const isChecked = allowedModes.includes(mode);
+                  const globallyEnabled = ALL_MODES.filter((m) => globEnabled(m));
+                  // Lock the checkbox if it's the only globally enabled mode — no choice to make.
+                  const isLocked = globallyEnabled.length === 1 && globallyEnabled[0] === mode;
                   return (
                     <label
                       key={mode}
-                      className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-xs transition-colors ${
+                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-all ${
                         !isEnabled
-                          ? "cursor-not-allowed border-zinc-800 text-zinc-600"
+                          ? "cursor-not-allowed border-zinc-800/60 text-zinc-600"
+                          : isLocked
+                          ? "cursor-default border-zinc-500 bg-zinc-800 text-zinc-200 shadow-sm"
                           : isChecked
-                          ? "border-zinc-500 bg-zinc-800 text-zinc-200"
-                          : "border-zinc-700 text-zinc-400 hover:border-zinc-600"
+                          ? "cursor-pointer border-zinc-500 bg-zinc-800 text-zinc-200 shadow-sm"
+                          : "cursor-pointer border-zinc-700/60 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
                       }`}
                     >
                       <input
                         type="checkbox"
                         className="accent-zinc-300"
                         checked={isChecked}
-                        disabled={!isEnabled || inviteState === "generating"}
-                        onChange={() => isEnabled && toggleMode(mode)}
+                        disabled={!isEnabled || isLocked || inviteState === "generating"}
+                        onChange={() => isEnabled && !isLocked && toggleMode(mode)}
                       />
                       {MODE_LABELS[mode]}
                       {!isEnabled && (
@@ -351,8 +400,8 @@ function InviteSection({
                 value={defaultMode}
                 onChange={(e) => setDefaultMode(e.target.value as Mode)}
                 required
-                disabled={allowedModes.length === 0 || inviteState === "generating"}
-                className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white outline-none focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={allowedModes.length === 0 || allowedModes.length === 1 || inviteState === "generating"}
+                className="rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="" disabled>
                   Select default…
@@ -365,17 +414,17 @@ function InviteSection({
               </select>
             </div>
 
-            {/* Can switch modes toggle */}
-            <label className="flex cursor-pointer items-center gap-3">
+            {/* Can switch modes toggle — only meaningful if >1 mode is selected */}
+            <label className={`flex items-center gap-3 ${allowedModes.length > 1 ? "cursor-pointer" : "cursor-not-allowed opacity-40"}`}>
               <div
-                onClick={() => setCanSwitch((v) => !v)}
+                onClick={() => allowedModes.length > 1 && setCanSwitch((v) => !v)}
                 className={`relative h-5 w-9 rounded-full transition-colors ${
-                  canSwitch ? "bg-zinc-400" : "bg-zinc-700"
+                  canSwitch && allowedModes.length > 1 ? "bg-zinc-400" : "bg-zinc-700"
                 }`}
               >
                 <span
                   className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                    canSwitch ? "translate-x-4" : "translate-x-0.5"
+                    canSwitch && allowedModes.length > 1 ? "translate-x-4" : "translate-x-0.5"
                   }`}
                 />
               </div>
@@ -387,22 +436,22 @@ function InviteSection({
               </span>
             </label>
 
-            <div className="flex items-center gap-4 pt-1">
+            <div className="flex flex-wrap items-center gap-4 pt-1">
               <button
                 type="submit"
                 disabled={inviteState === "generating"}
-                className="rounded-md bg-zinc-700 px-5 py-2 text-sm font-medium text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+                className="rounded-lg bg-zinc-700 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {inviteState === "generating" ? "Generating…" : "Generate invite"}
               </button>
 
               {inviteState === "error" && errorMessage && (
-                <span className="text-sm text-red-400">{errorMessage}</span>
+                <span className="text-xs text-red-400">{errorMessage}</span>
               )}
             </div>
           </form>
         )}
-      </div>
+      </Card>
     </section>
   );
 }
@@ -413,8 +462,6 @@ function InviteSection({
 
 /**
  * Shows a toggle per mode to enable/disable it globally.
- * Receives modesConfig from AdminControls and calls onModesChange on update
- * so the invite form stays in sync automatically.
  */
 function GlobalModesSection({
   token,
@@ -433,7 +480,6 @@ function GlobalModesSection({
   async function toggleMode(mode: Mode) {
     if (!modesConfig) return;
     const next = { ...modesConfig, [mode]: !modesConfig[mode] };
-    // Optimistic update.
     onModesChange(next);
     setSaveState("saving");
     setErrorMessage(null);
@@ -458,26 +504,24 @@ function GlobalModesSection({
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "Something went wrong.");
       setSaveState("error");
-      // Revert optimistic update.
       onModesChange(modesConfig);
     }
   }
 
   return (
-    <section className="mb-10">
-      <h2 className="mb-1 text-sm font-medium text-zinc-300">Mode settings</h2>
-      <p className="mb-6 text-xs text-zinc-500">
-        Enable or disable modes globally. Disabled modes are hidden from new invites
-        and rejected by the API.
-      </p>
+    <section className="mb-8">
+      <SectionHeader
+        title="Mode settings"
+        description="Enable or disable modes globally. Disabled modes are hidden from new invites and rejected by the API."
+      />
 
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+      <Card>
         {modesConfig ? (
-          <div className="space-y-3">
+          <div className="divide-y divide-zinc-800/60">
             {ALL_MODES.map((mode) => (
-              <div key={mode} className="flex items-center justify-between">
+              <div key={mode} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                 <span className="text-sm text-zinc-300">{MODE_LABELS[mode]}</span>
-                <label className="flex cursor-pointer items-center gap-2">
+                <label className="flex cursor-pointer items-center gap-2.5">
                   <div
                     onClick={() => toggleMode(mode)}
                     className={`relative h-5 w-9 rounded-full transition-colors ${
@@ -490,7 +534,7 @@ function GlobalModesSection({
                       }`}
                     />
                   </div>
-                  <span className="text-xs text-zinc-500">
+                  <span className="w-6 text-xs text-zinc-500">
                     {modesConfig[mode] ? "On" : "Off"}
                   </span>
                 </label>
@@ -498,13 +542,13 @@ function GlobalModesSection({
             ))}
 
             {saveState === "error" && errorMessage && (
-              <p className="pt-2 text-xs text-red-400">{errorMessage}</p>
+              <p className="pt-3 text-xs text-red-400">{errorMessage}</p>
             )}
           </div>
         ) : (
           <p className="text-xs text-zinc-600">Loading…</p>
         )}
-      </div>
+      </Card>
     </section>
   );
 }
@@ -515,7 +559,6 @@ function GlobalModesSection({
 
 /**
  * One textarea per mode. Each mode's overlay is saved independently.
- * Overlay content is injected alongside the base system prompt for chat requests.
  */
 function OverlayEditorSection({
   token,
@@ -534,7 +577,6 @@ function OverlayEditorSection({
     coworker: "idle",
     buddy: "idle",
   });
-  // Stored as newline-separated strings for easy textarea editing.
   const [prompts, setPrompts] = useState<Record<Mode, string>>({
     recruiter: "",
     coworker: "",
@@ -606,21 +648,28 @@ function OverlayEditorSection({
     }
   }
 
-  return (
-    <section className="mb-10">
-      <h2 className="mb-1 text-sm font-medium text-zinc-300">Mode overlays &amp; prompts</h2>
-      <p className="mb-6 text-xs text-zinc-500">
-        Configure the system prompt overlay and suggested prompts for each mode.
-      </p>
+  // Per-mode placeholder prompts so the textarea is self-documenting.
+  const PROMPT_PLACEHOLDERS: Record<Mode, string> = {
+    recruiter: "What's Laud's engineering background?\nWhat kind of roles is he looking for?\nHas he worked with AI systems before?",
+    coworker: "Walk me through your system design approach.\nHow do you handle tech debt?\nWhat's your take on microservices vs monoliths?",
+    buddy: "Roast Laud's career choices.\nWhat's his most embarrassing coding moment?\nBe honest — is he actually good?",
+  };
 
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900">
+  return (
+    <section className="mb-8">
+      <SectionHeader
+        title="Mode overlays & prompts"
+        description="Configure the system prompt overlay and suggested prompts for each mode."
+      />
+
+      <Card className="p-0 overflow-hidden">
         {/* Mode tabs */}
-        <div className="flex border-b border-zinc-800">
+        <div className="flex overflow-x-auto border-b border-zinc-800/70">
           {ALL_MODES.map((mode) => (
             <button
               key={mode}
               onClick={() => setActiveTab(mode)}
-              className={`px-4 py-2.5 text-xs font-medium transition-colors ${
+              className={`whitespace-nowrap px-4 py-3 text-xs font-medium transition-colors ${
                 activeTab === mode
                   ? "border-b-2 border-zinc-300 text-zinc-200"
                   : "text-zinc-500 hover:text-zinc-300"
@@ -631,10 +680,10 @@ function OverlayEditorSection({
           ))}
         </div>
 
-        <div className="space-y-6 p-6">
+        <div className="space-y-6 p-5 sm:p-6">
           {/* Overlay editor */}
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+            <label className="mb-1 block text-xs font-medium text-zinc-400">
               System prompt overlay
             </label>
             <p className="mb-2 text-xs text-zinc-600">
@@ -647,52 +696,60 @@ function OverlayEditorSection({
               }
               placeholder={`Overlay instructions for ${MODE_LABELS[activeTab]} mode…`}
               rows={7}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 outline-none focus:border-zinc-500 font-mono"
+              className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2.5 font-mono text-sm text-zinc-200 placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500"
             />
-            <div className="mt-2 flex items-center gap-4">
+            <div className="mt-2 flex items-center gap-3">
               <button
                 onClick={() => handleSaveOverlay(activeTab)}
                 disabled={overlaySaveStates[activeTab] === "saving"}
-                className="rounded-md bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+                className="rounded-lg bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {overlaySaveStates[activeTab] === "saving" ? "Saving…" : "Save overlay"}
               </button>
-              {overlaySaveStates[activeTab] === "saved" && <span className="text-xs text-emerald-400">✓ Saved</span>}
-              {overlaySaveStates[activeTab] === "error" && <span className="text-xs text-red-400">Save failed</span>}
+              {overlaySaveStates[activeTab] === "saved" && (
+                <span className="text-xs text-emerald-400">✓ Saved</span>
+              )}
+              {overlaySaveStates[activeTab] === "error" && (
+                <span className="text-xs text-red-400">Save failed</span>
+              )}
             </div>
           </div>
 
           {/* Suggested prompts editor */}
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+            <label className="mb-1 block text-xs font-medium text-zinc-400">
               Suggested prompts
             </label>
             <p className="mb-2 text-xs text-zinc-600">
-              One prompt per line. Shown as clickable chips in the chat empty state.
+              One prompt per line. Shown as clickable chips in the chat empty state for this mode.
             </p>
             <textarea
               value={prompts[activeTab]}
               onChange={(e) =>
                 setPrompts((prev) => ({ ...prev, [activeTab]: e.target.value }))
               }
-              placeholder={`e.g. What's Laud's engineering background?\nWhat kind of roles is he looking for?`}
+              placeholder={PROMPT_PLACEHOLDERS[activeTab]}
               rows={4}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 outline-none focus:border-zinc-500"
+              className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500"
             />
-            <div className="mt-2 flex items-center gap-4">
+            <div className="mt-2 flex items-center gap-3">
               <button
                 onClick={() => handleSavePrompts(activeTab)}
                 disabled={promptSaveStates[activeTab] === "saving"}
-                className="rounded-md bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+                className="rounded-lg bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {promptSaveStates[activeTab] === "saving" ? "Saving…" : "Save prompts"}
               </button>
-              {promptSaveStates[activeTab] === "saved" && <span className="text-xs text-emerald-400">✓ Saved</span>}
-              {promptSaveStates[activeTab] === "error" && <span className="text-xs text-red-400">Save failed</span>}
+              {promptSaveStates[activeTab] === "saved" && (
+                <span className="text-xs text-emerald-400">✓ Saved</span>
+              )}
+              {promptSaveStates[activeTab] === "error" && (
+                <span className="text-xs text-red-400">Save failed</span>
+              )}
             </div>
           </div>
         </div>
-      </div>
+      </Card>
     </section>
   );
 }
@@ -775,81 +832,82 @@ function LLMProviderSection({
     selectedProvider !== config?.provider || selectedModel !== config?.model;
 
   return (
-    <section className="mb-10">
-      <h2 className="mb-1 text-sm font-medium text-zinc-300">LLM Provider</h2>
-      <p className="mb-6 text-xs text-zinc-500">
-        Choose which AI provider and model answers questions. Changes take effect
-        immediately — no restart needed.
-      </p>
+    <section className="mb-8">
+      <SectionHeader
+        title="LLM Provider"
+        description="Choose which AI provider and model answers questions. Changes take effect immediately — no restart needed."
+      />
 
       {loadError && (
-        <div className="mb-4 rounded-lg border border-red-900 bg-red-950 px-4 py-3 text-sm text-red-400">
+        <div className="mb-4 rounded-xl border border-red-900/60 bg-red-950/60 px-4 py-3 text-sm text-red-400">
           {loadError}
         </div>
       )}
 
       {config && (
-        <div className="space-y-4 rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-zinc-400">
-              Provider
-            </label>
-            <div className="flex gap-3">
-              {Object.keys(config.available_models).map((provider) => (
-                <button
-                  key={provider}
-                  onClick={() => handleProviderChange(provider)}
-                  className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                    selectedProvider === provider
-                      ? "bg-zinc-100 text-zinc-900"
-                      : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200"
-                  }`}
-                >
-                  {provider === "claude" ? "Claude (Anthropic)" : "OpenAI"}
-                </button>
-              ))}
+        <Card>
+          <div className="space-y-5">
+            <div>
+              <label className="mb-2 block text-xs font-medium text-zinc-400">
+                Provider
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {Object.keys(config.available_models).map((provider) => (
+                  <button
+                    key={provider}
+                    onClick={() => handleProviderChange(provider)}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
+                      selectedProvider === provider
+                        ? "bg-zinc-100 text-zinc-900 shadow-sm"
+                        : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200"
+                    }`}
+                  >
+                    {provider === "claude" ? "Claude (Anthropic)" : "OpenAI"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-xs font-medium text-zinc-400">
+                Model
+              </label>
+              <select
+                value={selectedModel}
+                onChange={(e) => {
+                  setSelectedModel(e.target.value);
+                  setSaveState("idle");
+                }}
+                className="rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-zinc-500"
+              >
+                {availableModels.map((model) => (
+                  <option key={model} value={model}>
+                    {model}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-800/60 pt-4">
+              <button
+                onClick={handleSave}
+                disabled={saveState === "saving" || !isDirty}
+                className="rounded-lg bg-zinc-700 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saveState === "saving" ? "Saving…" : "Save"}
+              </button>
+
+              {saveState === "saved" && (
+                <span className="text-xs text-emerald-400">
+                  ✓ Active — next chat will use {selectedProvider} / {selectedModel}
+                </span>
+              )}
+              {saveState === "error" && errorMessage && (
+                <span className="text-xs text-red-400">{errorMessage}</span>
+              )}
             </div>
           </div>
-
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-zinc-400">
-              Model
-            </label>
-            <select
-              value={selectedModel}
-              onChange={(e) => {
-                setSelectedModel(e.target.value);
-                setSaveState("idle");
-              }}
-              className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white outline-none focus:border-zinc-500"
-            >
-              {availableModels.map((model) => (
-                <option key={model} value={model}>
-                  {model}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-4 pt-2">
-            <button
-              onClick={handleSave}
-              disabled={saveState === "saving" || !isDirty}
-              className="rounded-md bg-zinc-700 px-5 py-2 text-sm font-medium text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
-            >
-              {saveState === "saving" ? "Saving…" : "Save"}
-            </button>
-
-            {saveState === "saved" && (
-              <span className="text-sm text-emerald-400">
-                ✓ Active — next chat will use {selectedProvider} / {selectedModel}
-              </span>
-            )}
-            {saveState === "error" && errorMessage && (
-              <span className="text-sm text-red-400">{errorMessage}</span>
-            )}
-          </div>
-        </div>
+        </Card>
       )}
     </section>
   );
@@ -860,7 +918,6 @@ function LLMProviderSection({
 // ---------------------------------------------------------------------------
 
 function AdminControls({ token, onLogout }: { token: string; onLogout: () => void }) {
-  // Lifted here so InviteSection and GlobalModesSection share one source of truth.
   const [modesConfig, setModesConfig] = useState<Record<Mode, boolean> | null>(null);
 
   useEffect(() => {
@@ -876,17 +933,17 @@ function AdminControls({ token, onLogout }: { token: string; onLogout: () => voi
   }, [token, onLogout]);
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-10">
-      <div className="mb-10 flex items-center justify-between">
+    <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="mb-1 text-xl font-semibold text-white">Admin</h1>
-          <p className="text-sm text-zinc-500">
+          <h1 className="text-xl font-semibold text-white">Admin</h1>
+          <p className="mt-1 text-sm text-zinc-500">
             Owner-only controls for managing LaudBot&apos;s behaviour.
           </p>
         </div>
         <button
           onClick={onLogout}
-          className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-500 hover:border-zinc-600 hover:text-zinc-300"
+          className="mt-1 rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-300"
         >
           Sign out
         </button>
@@ -899,7 +956,7 @@ function AdminControls({ token, onLogout }: { token: string; onLogout: () => voi
 
       {/* Planned features */}
       <section>
-        <h2 className="mb-4 text-sm font-medium text-zinc-300">Coming soon</h2>
+        <SectionHeader title="Coming soon" />
         <div className="grid gap-4 sm:grid-cols-2">
           {[
             {
@@ -913,13 +970,10 @@ function AdminControls({ token, onLogout }: { token: string; onLogout: () => voi
                 "Audit past responses and flag anything that needs correction.",
             },
           ].map(({ title, description }) => (
-            <div
-              key={title}
-              className="rounded-lg border border-zinc-800 bg-zinc-900 p-5"
-            >
-              <h3 className="mb-2 text-sm font-medium text-zinc-500">{title}</h3>
+            <Card key={title}>
+              <h3 className="mb-1.5 text-sm font-medium text-zinc-500">{title}</h3>
               <p className="text-xs leading-relaxed text-zinc-600">{description}</p>
-            </div>
+            </Card>
           ))}
         </div>
       </section>
