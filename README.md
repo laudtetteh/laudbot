@@ -2,7 +2,7 @@
 
 > A privacy-aware, invite-only AI agent built to represent me to recruiters — demonstrating full-stack and AI system design skills through the product itself and the commit history that built it.
 
-**Status: v3 complete and live in production.**
+**Status: v4 UI complete and live in production.**
 Live at [laudbot.laudtetteh.io](https://laudbot.laudtetteh.io)
 
 ---
@@ -26,7 +26,9 @@ It is not a generic chatbot. It is a curated, privacy-aware professional agent t
 - Accept an invite link → receive a JWT-scoped to your allowed modes
 - Chat with LaudBot in your assigned mode: **Recruiter**, **Co-worker**, or **Buddy**
 - Switch between modes mid-session (if the admin enabled it for your invite)
-- Suggested prompts in the empty state to get you started
+- Clickable suggested prompts in the empty state to get you started
+- Animated typing indicator while responses load
+- Distinct styled bubbles for user vs assistant messages
 - Exit / log out at any time
 
 ### For the admin (me)
@@ -37,6 +39,12 @@ It is not a generic chatbot. It is a curated, privacy-aware professional agent t
 - Configure suggested prompts per mode
 - Switch the active LLM provider between Claude and OpenAI at runtime
 - Select the specific model within each provider
+
+### UI
+- Responsive layout — mobile-first, full-height chat on all screen sizes
+- Glassmorphism nav with active link highlight and mobile hamburger menu
+- Staggered entrance animations on the landing page
+- Custom Tailwind keyframes (`fadeIn`, `fadeInUp`, `slideDown`, `scaleIn`, `typingDot`)
 
 ### Infrastructure
 - Full CI/CD: push to `main` → build production images → push to GHCR → deploy to DigitalOcean App Platform
@@ -215,19 +223,22 @@ The PR sequence is a deliberate portfolio artifact — each PR tells a coherent 
 | #42 | `feat/invite-modes` | Invite modes: 3 personas, per-invite JWT config, mode controls, overlay editor |
 | #44 | `feat/email-invites` | Resend transactional email for invite delivery |
 | #46 | `feat/chat-ux-improvements` | Exit button, suggested prompts, mode labels + descriptions |
+| #47 | `chore/post-merge-docs-v3` | Post-merge housekeeping and doc updates for v3 |
+| #49 | `feat/ui-polish-v4` | v4 UI polish — animations, responsive layout, styled chat, admin improvements |
+| #51 | `fix/chat-header-mobile-layout` | Fix mode pill and CTA alignment on mobile viewports |
 
 ---
 
 ## Roadmap
 
-| Milestone | Scope |
-|-----------|-------|
-| v4 | UI polish — animations, hero gradient, chat bubbles, admin card styling |
-| v4 | PostgreSQL + pgvector — persistent chat history, invite storage |
-| v4 | Source ingestion pipeline — index approved files into vector store |
-| v4 | Retrieval-augmented generation — semantic search over approved content |
-| v4 | Rate limiting — required before any open/public deployment |
-| v4 | Next.js CVE patch (next@15.3.0) |
+| Milestone | Scope | Status |
+|-----------|-------|--------|
+| v4 | UI polish — animations, hero gradient, chat bubbles, admin card styling | ✅ Done |
+| v4 | Next.js CVE patch (`next@15.3.0`) | 🔜 Next |
+| v4 | PostgreSQL + pgvector — persistent chat history, invite storage | 🔜 Planned |
+| v4 | Source ingestion pipeline — index approved files into vector store | 🔜 Planned |
+| v4 | Retrieval-augmented generation — semantic search over approved content | 🔜 Planned |
+| v4 | Rate limiting — required before any open/public deployment | 🔜 Planned |
 
 ---
 

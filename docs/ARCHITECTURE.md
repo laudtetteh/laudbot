@@ -1,6 +1,6 @@
 # Architecture — LaudBot
 
-> Last updated: 2026-04-04 (v3 complete — invite modes, email invites, chat UX). Update this file as architectural decisions are made.
+> Last updated: 2026-04-05 (v4 UI complete — animations, responsive layout, glassmorphism nav, styled chat bubbles). Update this file as architectural decisions are made.
 
 ---
 
@@ -256,10 +256,10 @@ Every merge to `main` builds production Docker images (`Dockerfile.prod`), pushe
 
 | Feature | Notes |
 |---|---|
+| Next.js CVE patch | `next@15.3.0` — patch before public marketing push |
 | PostgreSQL + pgvector | Persistent chat history, invite storage, source registry |
 | Source ingestion pipeline | Index approved files into vector store |
 | Retrieval-augmented generation | Semantic search over approved content at chat time |
-| UI polish | Animations, hero gradient, chat bubbles, admin card styling |
 | Rate limiting | Required before open/public deployment |
 
 ---

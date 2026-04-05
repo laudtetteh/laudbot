@@ -1,7 +1,7 @@
 # Product requirements document — LaudBot
 
 > This is the source of truth for what we're building. Keep it updated as scope evolves.
-> Last updated: 2026-04-04 (v2 complete — auth, live LLM, admin UI, markdown rendering)
+> Last updated: 2026-04-05 (v4 UI complete — animations, responsive layout, glassmorphism nav, styled chat)
 
 ---
 
@@ -67,17 +67,47 @@ LaudBot gives recruiters a conversational interface to ask questions about me an
 
 ---
 
-## Features — v3 (planned)
+## Features — v3 ✅ Complete
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| Invite modes | 3 personas (`recruiter`, `coworker`, `buddy`) — mode embedded in JWT; per-invite `allowed_modes`, `default_mode`, `can_switch_modes` | ✅ |
+| Admin invite UI | Generate invite links from admin panel with per-invite mode config | ✅ |
+| Transactional invite email | Resend delivers invite link to recruiter email; non-fatal if key missing | ✅ |
+| DO App Platform deployment | CI/CD → GHCR image push → DO auto-deploy on merge to main | ✅ |
+| Exit / logout | Exit button in chat clears sessionStorage, redirects to `/` | ✅ |
+| Suggested prompts | Per-mode clickable chips in chat empty state, admin-configurable | ✅ |
+| Mode descriptions | Mode label and description shown in switch confirmation dialog | ✅ |
+
+---
+
+## Features — v4 UI ✅ Complete
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| Custom animations | Tailwind keyframes: `fadeIn`, `fadeInUp`, `slideDown`, `scaleIn`, `typingDot` | ✅ |
+| Full-height chat layout | `html`/`body` `h-full` scaffold → chat fills viewport, no fixed `h-[28rem]` | ✅ |
+| Glassmorphism nav | `backdrop-blur-md`, active link via `usePathname`, mobile hamburger | ✅ |
+| Hero gradient | Radial glow (indigo + violet), staggered entrance animation | ✅ |
+| Styled chat bubbles | User: `bg-zinc-100 text-zinc-900`; assistant: `bg-zinc-800/80` with border | ✅ |
+| Animated typing indicator | Three-dot bounce animation while waiting for response | ✅ |
+| Admin `Card` + `SectionHeader` primitives | Shared visual components for admin panel sections | ✅ |
+| Admin single-mode auto-select | When 1 mode globally enabled → allowed mode auto-checked/locked, default auto-set | ✅ |
+| Per-mode prompt placeholders | Admin textarea shows context-appropriate placeholder per mode | ✅ |
+| Invite/invite-required polish | Centered card layout, CSS spinner, error icon | ✅ |
+| Mobile-responsive chat header | Pills and Exit CTA stack cleanly on narrow viewports | ✅ |
+
+---
+
+## Features — v4 remaining (planned)
 
 | Feature | Description | Notes |
 |---------|-------------|-------|
-| Invite modes | Per-invite persona: recruiter, friend, technical, etc. Mode embedded in JWT; optional mode-switching configurable at invite time | See decisions log |
-| Admin invite UI | Generate invite links from admin page (no curl needed) | Small PR, high usability |
+| Next.js CVE patch | Upgrade `next` to latest — critical CVEs in `15.3.0` | Before public push |
 | Chat history persistence | Store messages keyed to `recruiter_id`; requires DB | `recruiter_id` already in JWT — no auth refactor |
 | PostgreSQL + pgvector | Persistent invite store, chat history, source registry | Prerequisite for retrieval |
 | Source ingestion pipeline | Index approved files into vector store | Requires DB |
 | Retrieval-augmented generation | Semantic search over approved content at chat time | Requires ingestion |
-| DO App Platform deployment | CI/CD → GHCR image push → DO auto-deploy on tag | Prod URL: laudbot.laudtetteh.io |
 | Rate limiting | Per-session or per-IP; required before public-facing | Add before open access |
 | Response review | Audit past responses, flag corrections | Requires chat history persistence |
 | Privacy filter | Policy-based layer intercepting sensitive outputs | Later phase |
@@ -151,9 +181,7 @@ Response: { "response": "string", "provider": "string", "model": "string" }
 
 - [ ] Which embedding model for the retrieval layer?
 - [ ] How are approved sources formally registered — a DB table, a YAML manifest, or directory convention?
-- [ ] Invite modes: which personas make sense? What data sources / system prompt variants does each need?
-- [ ] Mode-switching: frontend sessionStorage or backend session state?
-- [ ] Email delivery for invite links: Resend/SendGrid, or manual copy-paste from admin UI?
+- [ ] Chat history: show recruiter their own history on return? Or session-only?
 
 ---
 
@@ -174,3 +202,6 @@ Response: { "response": "string", "provider": "string", "model": "string" }
 | 2026-04-04 | Recruiter JWT carries `recruiter_id` from day one | Chat history will be keyed to `recruiter_id` — embedding it now avoids an auth-layer refactor when persistence lands |
 | 2026-04-04 | System prompt loaded from file, not hardcoded | Allows editing persona/knowledge without code changes or rebuilds; Docker volume mount keeps it out of the image |
 | 2026-04-04 | Invite modes deferred to v3 | Core invite flow ships first; mode concept is architecturally compatible — `mode` field added to JWT payload when that PR lands |
+| 2026-04-05 | UI polish as a dedicated v4 milestone | Accumulated technical UI debt from rapid v2/v3 feature builds — addressed in one focused pass rather than incrementally per PR |
+| 2026-04-05 | Full-height chat via CSS flex chain, not fixed height | `h-full` on `html`/`body` + `min-h-0` chain gives true viewport fill without JS height calculation or fixed `vh` units |
+| 2026-04-05 | Glassmorphism nav via `backdrop-blur-md` | Maintains visual hierarchy without a solid border; works across all page backgrounds |
