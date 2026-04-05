@@ -11,6 +11,7 @@
 
 ### 1. Orient
 Read these files before anything else:
+- `memory/CONTEXT_SNAPSHOT.md` — rolling state; written at end of every session
 - `memory/PROGRESS.md`
 - `memory/ERRORS.md`
 - The task file in `tasks/active/` or `tasks/backlog/`

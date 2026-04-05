@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-04-04 — v3-PR1: admin invite UI
+
+- InviteSection component added to frontend/app/admin/page.tsx
+- Email + optional note input → POST /api/admin/invitations with admin JWT
+- Success: invite URL displayed with copy-to-clipboard button
+- Error paths: expired session → logout, bad email → inline message, network error → inline message
+- Verified in-container: 200 happy path, 401 bad token, 422 invalid email all clean
+- PR open — branch: feat/admin-invite-ui
+
+---
+
 ## 2026-04-04 — v2-PR6: JWT auth for admin and recruiter invite flow
 
 - backend/app/core/security.py: create_token, decode_token, hash_password, verify_password (PyJWT + passlib/bcrypt)

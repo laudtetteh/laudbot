@@ -60,25 +60,32 @@ laudbot/
 
 ## How to run locally
 ```bash
-# Backend
-cd backend
-# TBD — update once FastAPI is scaffolded
+# Full stack (preferred)
+docker compose up
 
-# Frontend
-cd frontend
-# TBD — update once Next.js is scaffolded
+# Backend only — http://localhost:8000
+cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload
+
+# Frontend only — http://localhost:3001
+cd frontend && npm install && npm run dev
 ```
+
+Note: Docker build requires `/usr/local/bin` in PATH for credential helper.
+Use full path `/usr/local/bin/docker` if `docker` is not found in shell.
 
 ## How to run tests
 ```bash
-# TBD — update once test framework is decided
+# TBD — test framework not yet decided
 ```
 
 ## Context files to load at session start
-When starting a new session on this project, always read:
-1. `memory/PROGRESS.md` — what's been done
-2. `memory/ERRORS.md` — known pitfalls
-3. `tasks/active/` — current active task(s)
+When starting a new session on this project, always read in this order:
+1. `memory/CONTEXT_SNAPSHOT.md` — rolling state written at end of every session
+2. `memory/PROGRESS.md` — full history of what's been done
+3. `memory/ERRORS.md` — known pitfalls and footguns
+4. `tasks/active/` — current active task(s)
+
+`CONTEXT_SNAPSHOT.md` is the fastest way to orient. If it doesn't exist, fall back to PROGRESS.md.
 
 ## Imported rules
 @rules/coding-standards.md
