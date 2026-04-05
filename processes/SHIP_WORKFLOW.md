@@ -41,7 +41,13 @@ References: [TASK_NAME]
 - Overwrite `memory/CONTEXT_SNAPSHOT.md` with current state (never delete — always overwrite)
 - If anything surprised you, add it to `memory/ERRORS.md`
 
-### 5. Deploy (if applicable)
+### 5. Open PR
+- Use the PR template exactly (Summary, Changes, Closes, Test plan, Notes)
+- **Apply labels at creation time** — never retroactively:
+  - `type:` label matching the commit type (feat, fix, chore, docs, etc.)
+  - `area:` label(s) for the layers touched (backend, frontend, infra, ai, data)
+
+### 6. Deploy (if applicable)
 [Customise with your actual deploy commands]
 ```bash
 # example
