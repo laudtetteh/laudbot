@@ -171,7 +171,7 @@ export default function ChatPage() {
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col min-h-0">
 
         {/* Header row */}
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-3 flex-shrink-0">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between flex-shrink-0">
           <div>
             <h1 className="text-base font-semibold text-white sm:text-lg">Chat</h1>
             <p className="mt-0.5 text-xs text-zinc-500 sm:text-sm">
@@ -179,14 +179,14 @@ export default function ChatPage() {
             </p>
           </div>
 
-          {/* Right side: mode selector + actions */}
-          <div className="flex flex-col items-end gap-2">
+          {/* Mode selector + actions */}
+          <div className="flex flex-row items-center justify-between gap-3 sm:flex-col sm:items-end sm:gap-2">
             {activeMode && (
-              <div className="flex flex-col items-end gap-1.5">
+              <div className="flex flex-row items-center gap-2 sm:flex-col sm:items-end sm:gap-1.5">
                 <p className="text-xs text-zinc-600">I am a…</p>
 
                 {canSwitchModes && allowedModes.length > 1 ? (
-                  <div className="flex flex-wrap justify-end gap-1 rounded-lg border border-zinc-800 bg-zinc-900 p-1">
+                  <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-800 bg-zinc-900 p-1">
                     {allowedModes.map((mode) => (
                       <button
                         key={mode}
@@ -209,7 +209,7 @@ export default function ChatPage() {
               </div>
             )}
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:self-end">
               {messages.length > 0 && (
                 <button
                   onClick={handleNewConversation}
