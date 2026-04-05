@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
 
 from app.core.dependencies import get_current_recruiter
 from app.models.chat import ChatRequest, ChatResponse
@@ -9,6 +10,33 @@ from app.services.llm.factory import provider_factory
 from app.services.prompt import compose_system_prompt
 
 router = APIRouter(prefix="/api")
+
+
+class ModePromptsMap(BaseModel):
+    """Suggested prompts for each of the recruiter's allowed modes."""
+
+    prompts_by_mode: dict[str, list[str]]
+
+
+@router.get("/chat/prompts", response_model=ModePromptsMap)
+async def get_chat_prompts(
+    request: Request,
+    recruiter: dict = Depends(get_current_recruiter),
+) -> ModePromptsMap:
+    """Return suggested prompts for all modes the recruiter is allowed to access.
+
+    Args:
+        request: FastAPI request (used to access app.state).
+        recruiter: Decoded recruiter JWT payload (injected by dependency).
+
+    Returns:
+        Map of mode slug → list of suggested prompt strings.
+    """
+    allowed_modes: list[str] = recruiter.get("allowed_modes", [])
+    all_prompts: dict[str, list[str]] = request.app.state.mode_prompts
+    return ModePromptsMap(
+        prompts_by_mode={mode: all_prompts.get(mode, []) for mode in allowed_modes}
+    )
 
 
 @router.post("/chat", response_model=ChatResponse)

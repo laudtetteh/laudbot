@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from app.core.dependencies import get_current_admin
 from app.services.llm.base import MODES
@@ -147,3 +147,81 @@ async def update_mode_overlay(
         )
     request.app.state.mode_overlays[mode] = body.overlay.strip()
     return ModeOverlayResponse(mode=mode, overlay=body.overlay.strip())
+
+
+# ---------------------------------------------------------------------------
+# Per-mode suggested prompts endpoints
+# ---------------------------------------------------------------------------
+
+
+class ModePromptsResponse(BaseModel):
+    """Suggested prompts for a single mode."""
+
+    mode: str
+    prompts: list[str]
+
+
+class UpdateModePromptsRequest(BaseModel):
+    """New suggested prompts list for a single mode."""
+
+    prompts: list[str]
+
+    @field_validator("prompts")
+    @classmethod
+    def strip_empty(cls, v: list[str]) -> list[str]:
+        """Drop blank entries so the UI doesn't render empty chips."""
+        return [p.strip() for p in v if p.strip()]
+
+
+@router.get("/{mode}/prompts", response_model=ModePromptsResponse)
+async def get_mode_prompts(mode: str, request: Request) -> ModePromptsResponse:
+    """Return the current suggested prompts for a single mode.
+
+    Args:
+        mode: Mode slug (e.g. "recruiter").
+        request: FastAPI request (used to access app.state).
+
+    Returns:
+        Mode slug and its current suggested prompts list.
+
+    Raises:
+        HTTPException 404: If the mode slug is not recognised.
+    """
+    if mode not in MODES:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unknown mode: {mode}. Valid modes: {MODES}",
+        )
+    prompts = request.app.state.mode_prompts.get(mode, [])
+    return ModePromptsResponse(mode=mode, prompts=prompts)
+
+
+@router.put("/{mode}/prompts", response_model=ModePromptsResponse)
+async def update_mode_prompts(
+    mode: str,
+    body: UpdateModePromptsRequest,
+    request: Request,
+) -> ModePromptsResponse:
+    """Replace the suggested prompts list for a single mode.
+
+    Takes effect immediately for all subsequent chat sessions.
+    Stored in memory only — resets on restart.
+
+    Args:
+        mode: Mode slug (e.g. "recruiter").
+        body: New prompts list (blank entries are ignored).
+        request: FastAPI request (used to access app.state).
+
+    Returns:
+        Mode slug and the saved prompts list.
+
+    Raises:
+        HTTPException 404: If the mode slug is not recognised.
+    """
+    if mode not in MODES:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unknown mode: {mode}. Valid modes: {MODES}",
+        )
+    request.app.state.mode_prompts[mode] = body.prompts
+    return ModePromptsResponse(mode=mode, prompts=body.prompts)

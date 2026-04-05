@@ -33,6 +33,10 @@ app.state.mode_overlays: dict[str, str] = {
     mode: load_mode_overlay(mode) for mode in MODES
 }
 
+# Per-mode suggested prompts shown as chips in the chat empty state.
+# Updated at runtime via PUT /api/admin/modes/{mode}/prompts.
+app.state.mode_prompts: dict[str, list[str]] = {mode: [] for mode in MODES}
+
 app.include_router(health_router)
 app.include_router(chat_router)
 app.include_router(admin_config_router)

@@ -18,6 +18,12 @@ const MODE_LABELS: Record<string, string> = {
   buddy: "Buddy",
 };
 
+const MODE_DESCRIPTIONS: Record<string, string> = {
+  recruiter: "Professional conversation about career, skills, and role fit",
+  coworker: "Technical deep-dive — architecture, decisions, and engineering craft",
+  buddy: "Casual and playful, with a healthy dose of friendly roasting",
+};
+
 export default function ChatPage() {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -29,6 +35,7 @@ export default function ChatPage() {
   const [allowedModes, setAllowedModes] = useState<string[]>([]);
   const [canSwitchModes, setCanSwitchModes] = useState(false);
   const [switchConfirm, setSwitchConfirm] = useState<string | null>(null);
+  const [promptsByMode, setPromptsByMode] = useState<Record<string, string[]>>({});
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Resolve recruiter token and mode config on mount.
@@ -38,16 +45,29 @@ export default function ChatPage() {
       router.replace("/invite-required");
       return;
     }
+    const mode = sessionStorage.getItem("active_mode") ?? "";
+    const modes = JSON.parse(sessionStorage.getItem("allowed_modes") ?? "[]");
+    const canSwitch = sessionStorage.getItem("can_switch_modes") === "true";
+
     setToken(stored);
-    setActiveMode(sessionStorage.getItem("active_mode") ?? "");
-    setAllowedModes(JSON.parse(sessionStorage.getItem("allowed_modes") ?? "[]"));
-    setCanSwitchModes(sessionStorage.getItem("can_switch_modes") === "true");
+    setActiveMode(mode);
+    setAllowedModes(modes);
+    setCanSwitchModes(canSwitch);
+
+    // Fetch suggested prompts for all allowed modes.
+    fetch("/api/chat/prompts", {
+      headers: { Authorization: `Bearer ${stored}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.prompts_by_mode) setPromptsByMode(data.prompts_by_mode);
+      })
+      .catch(() => {/* non-fatal */});
   }, [router]);
 
   function handleModeSwitch(mode: string) {
     if (mode === activeMode) return;
     if (messages.length > 0) {
-      // Ask for confirmation before clearing conversation.
       setSwitchConfirm(mode);
     } else {
       applyModeSwitch(mode);
@@ -62,11 +82,21 @@ export default function ChatPage() {
     setSwitchConfirm(null);
   }
 
-  async function sendMessage() {
-    const text = input.trim();
-    if (!text || loading || !token) return;
+  function handleNewConversation() {
+    setMessages([]);
+    setError(null);
+  }
 
-    const userMessage: Message = { role: "user", content: text };
+  function handleLogout() {
+    sessionStorage.clear();
+    router.replace("/");
+  }
+
+  async function sendMessage(text?: string) {
+    const content = (text ?? input).trim();
+    if (!content || loading || !token) return;
+
+    const userMessage: Message = { role: "user", content };
     const nextMessages = [...messages, userMessage];
 
     setMessages(nextMessages);
@@ -82,14 +112,13 @@ export default function ChatPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          messages: nextMessages.map(({ role, content }) => ({ role, content })),
+          messages: nextMessages.map(({ role, content: c }) => ({ role, content: c })),
           active_mode: activeMode || undefined,
         }),
       });
 
       if (res.status === 401) {
-        sessionStorage.removeItem("recruiter_token");
-        sessionStorage.removeItem("recruiter_id");
+        sessionStorage.clear();
         router.replace("/invite-required");
         return;
       }
@@ -124,67 +153,92 @@ export default function ChatPage() {
     }
   }
 
-  // Show nothing while token is being resolved (avoids flash).
   if (token === null) return null;
+
+  const suggestedPrompts = activeMode ? (promptsByMode[activeMode] ?? []) : [];
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col px-6 py-10">
-      {/* Header row: title + mode badge / pill selector */}
+      {/* Header row */}
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
           <h1 className="mb-1 text-xl font-semibold text-white">Chat</h1>
           <p className="text-sm text-zinc-500">
-            Ask questions about Laud&apos;s background, projects, and experience.
+            Ask anything about Laud&apos;s background, projects, and experience.
           </p>
         </div>
 
-        {/* Mode display */}
-        {activeMode && (
-          <div className="flex flex-col items-end gap-1.5">
-            {canSwitchModes && allowedModes.length > 1 ? (
-              /* Pill selector — only shown when switching is permitted */
-              <div className="flex gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 p-1">
-                {allowedModes.map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => handleModeSwitch(mode)}
-                    className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                      mode === activeMode
-                        ? "bg-zinc-700 text-white"
-                        : "text-zinc-500 hover:text-zinc-300"
-                    }`}
-                  >
-                    {MODE_LABELS[mode] ?? mode}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              /* Read-only badge */
-              <span className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-400">
-                {MODE_LABELS[activeMode] ?? activeMode}
-              </span>
+        {/* Right side: mode selector + actions */}
+        <div className="flex flex-col items-end gap-2">
+          {activeMode && (
+            <div className="flex flex-col items-end gap-1.5">
+              {/* "I am a…" label */}
+              <p className="text-xs text-zinc-600">I am a…</p>
+
+              {canSwitchModes && allowedModes.length > 1 ? (
+                <div className="flex gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 p-1">
+                  {allowedModes.map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => handleModeSwitch(mode)}
+                      className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                        mode === activeMode
+                          ? "bg-zinc-700 text-white"
+                          : "text-zinc-500 hover:text-zinc-300"
+                      }`}
+                    >
+                      {MODE_LABELS[mode] ?? mode}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <span className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-400">
+                  {MODE_LABELS[activeMode] ?? activeMode}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Action buttons row */}
+          <div className="flex items-center gap-2">
+            {messages.length > 0 && (
+              <button
+                onClick={handleNewConversation}
+                className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+              >
+                New conversation
+              </button>
             )}
-            <span className="text-xs text-zinc-600">mode</span>
+            <button
+              onClick={handleLogout}
+              className="rounded-md border border-zinc-800 px-3 py-1 text-xs text-zinc-500 hover:border-zinc-600 hover:text-zinc-300 transition-colors"
+            >
+              Exit
+            </button>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Mode switch confirmation dialog */}
       {switchConfirm && (
-        <div className="mb-4 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3">
-          <p className="mb-3 text-sm text-zinc-300">
-            Switching to{" "}
-            <span className="font-medium text-white">
-              {MODE_LABELS[switchConfirm] ?? switchConfirm}
-            </span>{" "}
-            mode will start a new conversation. Continue?
+        <div className="mb-4 rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-4">
+          <p className="mb-1 text-sm font-medium text-white">
+            Switch to {MODE_LABELS[switchConfirm] ?? switchConfirm} mode?
+          </p>
+          {MODE_DESCRIPTIONS[switchConfirm] && (
+            <p className="mb-3 text-xs text-zinc-500">
+              {MODE_DESCRIPTIONS[switchConfirm]}
+            </p>
+          )}
+          <p className="mb-3 text-xs text-zinc-600">
+            This will start a new conversation.
           </p>
           <div className="flex gap-3">
             <button
               onClick={() => applyModeSwitch(switchConfirm)}
               className="rounded-md bg-zinc-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-600"
             >
-              Yes, start new chat
+              Yes, switch mode
             </button>
             <button
               onClick={() => setSwitchConfirm(null)}
@@ -199,8 +253,39 @@ export default function ChatPage() {
       {/* Message area */}
       <div className="mb-4 flex h-[28rem] flex-col gap-4 overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900 p-4">
         {messages.length === 0 && !loading && (
-          <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-zinc-600">No messages yet.</p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-6">
+            {/* Mode-aware welcome */}
+            <div className="text-center">
+              <p className="mb-1 text-sm font-medium text-zinc-400">
+                {activeMode
+                  ? `You're in ${MODE_LABELS[activeMode] ?? activeMode} mode`
+                  : "Welcome"}
+              </p>
+              {activeMode && MODE_DESCRIPTIONS[activeMode] && (
+                <p className="text-xs text-zinc-600">
+                  {MODE_DESCRIPTIONS[activeMode]}
+                </p>
+              )}
+            </div>
+
+            {/* Suggested prompt chips */}
+            {suggestedPrompts.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-2">
+                {suggestedPrompts.map((prompt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => sendMessage(prompt)}
+                    className="rounded-full border border-zinc-700 bg-zinc-800 px-4 py-1.5 text-xs text-zinc-400 transition-colors hover:border-zinc-500 hover:text-zinc-200"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {suggestedPrompts.length === 0 && (
+              <p className="text-xs text-zinc-700">Ask me anything.</p>
+            )}
           </div>
         )}
 
@@ -277,7 +362,7 @@ export default function ChatPage() {
           className="flex-1 rounded-md border border-zinc-800 bg-zinc-900 px-4 py-2.5 text-sm text-white placeholder-zinc-600 outline-none focus:border-zinc-600 disabled:text-zinc-500"
         />
         <button
-          onClick={sendMessage}
+          onClick={() => sendMessage()}
           disabled={loading || !input.trim()}
           className="rounded-md bg-zinc-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-zinc-600 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
         >
