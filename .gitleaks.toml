@@ -1,0 +1,22 @@
+# gitleaks configuration
+# Docs: https://github.com/gitleaks/gitleaks#configuration
+
+[extend]
+# Inherit gitleaks' built-in ruleset as the base.
+useDefault = true
+
+[allowlist]
+description = "Known safe paths and patterns"
+
+# Template files contain placeholder values that are intentionally not real secrets.
+paths = [
+  ".env.example",
+]
+
+# Regexes matched against the full secret value.
+# "changeme" and the dev JWT key are documented placeholders — they must never
+# appear in production env vars, but committing them in .env.example is intentional.
+regexes = [
+  "changeme",
+  "dev-secret-change-in-production",
+]
