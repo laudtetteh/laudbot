@@ -48,7 +48,24 @@ In the DO dashboard → App Platform → Create App:
 - After creation, find the App ID in the URL: `cloud.digitalocean.com/apps/<APP_ID>` or via `doctl apps list`
 - Add `DO_APP_ID` to GitHub Actions secrets (step 2)
 
-### 4. Set production env vars in DO
+### 4. Provision the managed Postgres database
+
+The `databases` block in `.do/app.yaml` tells DO App Platform to create and manage a Postgres 16 cluster automatically on first deploy. You do **not** need to create it manually via the dashboard.
+
+What DO handles automatically:
+- Provisions a `db-s-1vcpu-1gb` Postgres 16 cluster in the same region as the app (SFO)
+- Injects `${db.DATABASE_URL}` into the backend service at runtime
+- Manages backups, failover, and TLS — no config needed
+
+What you need to do manually (one-time, after first deploy):
+1. In the DO dashboard → Databases → `laudbot-db` → Settings → Trusted Sources
+2. Add your App Platform app as a trusted source — restricts DB access to your app only
+
+`DATABASE_URL` is wired automatically via `.do/app.yaml`. Do **not** add it manually in the dashboard.
+
+pgvector is pre-installed on DO managed Postgres. The migration enables it via `CREATE EXTENSION IF NOT EXISTS vector` on first startup — no extra dashboard steps.
+
+### 5. Set production env vars in DO
 
 In the App Platform dashboard → your app → Settings → App-Level Environment Variables, add these as **encrypted** (secret) values:
 
@@ -61,10 +78,11 @@ In the App Platform dashboard → your app → Settings → App-Level Environmen
 | `JWT_SECRET_KEY` | Generate: `openssl rand -hex 32` |
 | `SYSTEM_PROMPT` | Full content of your system prompt (paste from `data/approved/system_prompt.md`) |
 | `FRONTEND_URL` | `https://laudbot.laudtetteh.io` |
+| `RESEND_API_KEY` | From resend.com/api-keys |
 
-`BACKEND_URL` and `NODE_ENV` are set in `.do/app.yaml` (non-secret, version-controlled).
+`BACKEND_URL`, `NODE_ENV`, and `DATABASE_URL` are set in `.do/app.yaml` — do not override in the dashboard.
 
-### 5. Configure the custom domain
+### 6. Configure the custom domain
 
 In DO App Platform → your app → Settings → Domains:
 - Add `laudbot.laudtetteh.io`
@@ -76,7 +94,7 @@ In Cloudflare DNS for `laudtetteh.io`:
 - Target: the CNAME value from DO
 - Proxy: **DNS only (grey cloud)** — DO App Platform manages TLS; Cloudflare proxy causes cert conflicts
 
-### 6. Trigger first deploy
+### 7. Trigger first deploy
 
 Push any commit to `main`, or manually trigger the workflow in GitHub Actions → `Build and deploy` → `Run workflow`.
 
@@ -98,7 +116,9 @@ DO App Platform routes traffic between services using internal service names. Th
 | `ADMIN_PASSWORD` | ✅ | — | DO dashboard (secret) |
 | `JWT_SECRET_KEY` | ✅ | — | DO dashboard (secret) |
 | `SYSTEM_PROMPT` | ✅ | — | DO dashboard (secret) |
+| `RESEND_API_KEY` | ✅ | — | DO dashboard (secret) |
 | `FRONTEND_URL` | ✅ | — | `.do/app.yaml` |
+| `DATABASE_URL` | ✅ | — | `.do/app.yaml` (auto-injected from managed DB) |
 | `BACKEND_URL` | — | ✅ | `.do/app.yaml` |
 | `NODE_ENV` | — | ✅ | `.do/app.yaml` |
 
@@ -115,5 +135,6 @@ No code changes needed.
 
 ## Known limitations
 
-- **In-memory state resets on deploy** — `app.state.invite_tokens` and `app.state.llm_config` reset on every deploy. Invite tokens generated before a deploy are invalid after. Mitigated when PostgreSQL is added.
+- **`app.state.llm_config` resets on deploy** — the runtime LLM provider/model preference is in-memory by design. Resetting on restart is acceptable; it defaults to Claude.
 - **No zero-downtime guarantee** at 1 instance — DO App Platform does rolling deploys, but with 1 instance there's a brief gap. Increase `instance_count` to 2 for true zero-downtime.
+- **DB cluster is not zero-cost** — `db-s-1vcpu-1gb` runs at ~$15/month independent of app instance count. Destroy the cluster from the DO dashboard if taking the app fully offline.

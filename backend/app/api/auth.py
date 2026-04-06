@@ -1,12 +1,20 @@
+"""Auth routes — admin login and recruiter invite flow.
+
+All invite state is now persisted to the ``invitations`` DB table.
+"""
 from __future__ import annotations
 
 import os
 import uuid
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_current_admin
+from app.core.dependencies import get_current_admin, get_db
 from app.core.security import create_token, verify_password
+from app.db.models import Invitation, ModeConfig
 from app.models.auth import (
     AcceptInviteRequest,
     AcceptInviteResponse,
@@ -42,9 +50,6 @@ async def admin_login(body: AdminLoginRequest) -> AdminLoginResponse:
     expected_password = os.environ.get("ADMIN_PASSWORD", "")
 
     username_ok = body.username == expected_username
-    # verify_password handles timing-safe comparison via bcrypt.
-    # Fall back to plain equality if the stored value is not a bcrypt hash
-    # (allows plain-text passwords in .env without pre-hashing).
     try:
         password_ok = verify_password(body.password, expected_password)
     except Exception:
@@ -72,32 +77,33 @@ async def admin_login(body: AdminLoginRequest) -> AdminLoginResponse:
 )
 async def create_invitation(
     body: CreateInvitationRequest,
-    request: Request,
+    db: AsyncSession = Depends(get_db),
 ) -> CreateInvitationResponse:
-    """Generate a recruiter invite token and return the invite URL.
+    """Generate a recruiter invite token and persist it to the DB.
 
-    Requires a valid admin JWT (``Authorization: Bearer <token>``).
-    Tokens are stored in ``app.state.invite_tokens`` keyed by invite_id.
-    The invite URL is constructed from the ``FRONTEND_URL`` env var
-    (defaults to ``http://localhost:3001``).
+    Validates that all requested modes are valid and globally enabled.
+    The invite URL is constructed from the ``FRONTEND_URL`` env var.
 
     Args:
-        body: Recruiter email and optional note.
-        request: FastAPI request (used to access app.state).
+        body: Recruiter email, optional note, and mode config.
+        db: Injected async DB session.
 
     Returns:
         Invite ID, raw token, email, and full invite URL.
-    """
-    enabled_modes: dict[str, bool] = request.app.state.modes_config
 
-    # Validate that all requested modes are valid and globally enabled.
+    Raises:
+        HTTPException 400: If any mode is unknown or globally disabled.
+    """
+    result = await db.execute(select(ModeConfig))
+    mode_rows: dict[str, bool] = {row.mode: row.enabled for row in result.scalars()}
+
     invalid = [m for m in body.allowed_modes if m not in MODES]
     if invalid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unknown mode(s): {invalid}. Valid modes: {MODES}",
         )
-    disabled = [m for m in body.allowed_modes if not enabled_modes.get(m, False)]
+    disabled = [m for m in body.allowed_modes if not mode_rows.get(m, False)]
     if disabled:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -109,23 +115,24 @@ async def create_invitation(
             detail="default_mode must be one of the allowed_modes",
         )
 
-    invite_id = str(uuid.uuid4())
-    invite_token = str(uuid.uuid4())
+    invite_id = uuid.uuid4()
+    invite_token = uuid.uuid4()
 
-    # Store token → invite data mapping for validation at accept-invite time.
-    request.app.state.invite_tokens[invite_token] = {
-        "invite_id": invite_id,
-        "email": body.email,
-        "note": body.note,
-        "allowed_modes": body.allowed_modes,
-        "default_mode": body.default_mode,
-        "can_switch_modes": body.can_switch_modes,
-    }
+    invitation = Invitation(
+        id=invite_id,
+        email=str(body.email),
+        note=body.note,
+        invite_token=invite_token,
+        allowed_modes=body.allowed_modes,
+        default_mode=body.default_mode,
+        can_switch_modes=body.can_switch_modes,
+    )
+    db.add(invitation)
+    await db.commit()
 
     frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3001")
     invite_url = f"{frontend_url}/invite?token={invite_token}"
 
-    # Send invite email — non-blocking, non-fatal. No-ops if RESEND_API_KEY unset.
     await send_invite_email(
         to_email=str(body.email),
         invite_url=invite_url,
@@ -134,8 +141,8 @@ async def create_invitation(
     )
 
     return CreateInvitationResponse(
-        invite_id=invite_id,
-        invite_token=invite_token,
+        invite_id=str(invite_id),
+        invite_token=str(invite_token),
         email=body.email,
         invite_url=invite_url,
     )
@@ -149,18 +156,17 @@ async def create_invitation(
 @auth_router.post("/accept-invite", response_model=AcceptInviteResponse)
 async def accept_invite(
     body: AcceptInviteRequest,
-    request: Request,
+    db: AsyncSession = Depends(get_db),
 ) -> AcceptInviteResponse:
     """Exchange an invite token for a recruiter JWT.
 
-    Validates the invite token against ``app.state.invite_tokens``.
-    On success, creates a recruiter JWT carrying a stable ``recruiter_id``
-    (tied to the invite) so future chat history can be keyed to it.
-    Token TTL is 7 days to avoid interrupting recruiter conversations.
+    Looks up the token in the ``invitations`` table, stamps ``accepted_at``
+    and ``recruiter_id``, then returns a signed JWT. The token remains valid
+    for repeat visits (idempotent accept).
 
     Args:
-        body: The raw invite token.
-        request: FastAPI request (used to access app.state).
+        body: The raw invite token (UUID string).
+        db: Injected async DB session.
 
     Returns:
         Recruiter JWT and the durable recruiter_id.
@@ -168,27 +174,45 @@ async def accept_invite(
     Raises:
         HTTPException 401: If the invite token is not recognised.
     """
-    invite_data = request.app.state.invite_tokens.get(body.invite_token)
-    if invite_data is None:
+    try:
+        token_uuid = uuid.UUID(body.invite_token)
+    except (ValueError, AttributeError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired invite token",
         )
 
-    recruiter_id = str(uuid.uuid4())
+    result = await db.execute(
+        select(Invitation).where(Invitation.invite_token == token_uuid)
+    )
+    invitation: Invitation | None = result.scalar_one_or_none()
+
+    if invitation is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired invite token",
+        )
+
+    # Use existing recruiter_id if this token was already accepted.
+    recruiter_id = invitation.recruiter_id or uuid.uuid4()
+
+    invitation.accepted_at = datetime.now(timezone.utc)
+    invitation.recruiter_id = recruiter_id
+    await db.commit()
+
     token = create_token(
         {
-            "sub": recruiter_id,
+            "sub": str(recruiter_id),
             "role": "recruiter",
-            "invite_id": invite_data["invite_id"],
-            "allowed_modes": invite_data["allowed_modes"],
-            "default_mode": invite_data["default_mode"],
-            "can_switch_modes": invite_data["can_switch_modes"],
+            "invite_id": str(invitation.id),
+            "allowed_modes": invitation.allowed_modes,
+            "default_mode": invitation.default_mode,
+            "can_switch_modes": invitation.can_switch_modes,
         },
-        expire_hours=7 * 24,  # 7 days
+        expire_hours=7 * 24,
     )
 
     return AcceptInviteResponse(
         access_token=token,
-        recruiter_id=recruiter_id,
+        recruiter_id=str(recruiter_id),
     )
