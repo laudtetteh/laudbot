@@ -24,9 +24,10 @@ from app.api.auth import admin_router, auth_router
 from app.api.chat import router as chat_router
 from app.api.health import router as health_router
 from app.db.base import AsyncSessionLocal
-from app.db.models import ModeConfig
+from app.db.models import ModeConfig, SystemConfig
 from app.services.llm.base import DEFAULT_MODELS, MODES, LLMConfig
 from app.services.prompt import load_mode_overlay
+from sqlalchemy import select
 
 
 def _run_migrations() -> None:
@@ -71,11 +72,30 @@ async def _seed_mode_config() -> None:
         await session.commit()
 
 
+async def _load_system_prompt(app: FastAPI) -> None:
+    """Load the admin-saved system prompt from the DB into app.state.
+
+    If no row exists (fresh install or first use of the admin panel),
+    app.state.system_prompt remains None and prompt.py falls back to
+    the SYSTEM_PROMPT env var, then the file, then the inline stub.
+
+    Args:
+        app: The FastAPI application instance.
+    """
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(SystemConfig).where(SystemConfig.key == "system_prompt")
+        )
+        row = result.scalar_one_or_none()
+        app.state.system_prompt = row.value if row else None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Run startup tasks before serving requests."""
     _run_migrations()
     await _seed_mode_config()
+    await _load_system_prompt(app)
     yield
 
 
