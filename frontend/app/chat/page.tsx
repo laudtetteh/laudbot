@@ -60,7 +60,13 @@ export default function ChatPage() {
 
     setToken(stored);
     setActiveMode(mode);
-    setAllowedModes(modes);
+    const CANONICAL_MODE_ORDER = ["recruiter", "coworker", "buddy"];
+    setAllowedModes(
+      [...modes].sort(
+        (a, b) =>
+          CANONICAL_MODE_ORDER.indexOf(a) - CANONICAL_MODE_ORDER.indexOf(b),
+      ),
+    );
     setCanSwitchModes(canSwitch);
 
     // Fetch suggested prompts for all allowed modes.
@@ -227,7 +233,7 @@ export default function ChatPage() {
           </div>
 
           {/* Mode selector + actions */}
-          <div className="flex flex-row items-center justify-between gap-3 sm:flex-col sm:items-end sm:gap-2">
+          <div className="flex flex-col gap-2 sm:items-end">
             {activeMode && (
               <div className="flex flex-row items-center gap-2 sm:flex-col sm:items-end sm:gap-1.5">
                 <p className="text-xs text-zinc-600">I am a…</p>
@@ -262,7 +268,7 @@ export default function ChatPage() {
                   onClick={handleNewConversation}
                   className="text-xs text-zinc-600 transition-colors hover:text-zinc-400"
                 >
-                  New conversation
+                  + New Chat
                 </button>
               )}
               <button
