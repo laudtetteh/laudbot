@@ -588,6 +588,7 @@ function OverlayEditorSection({
     buddy: "idle",
   });
   const [activeTab, setActiveTab] = useState<Mode>("recruiter");
+  const [isUnlocked, setIsUnlocked] = useState(false);
 
   useEffect(() => {
     ALL_MODES.forEach((mode) => {
@@ -657,99 +658,129 @@ function OverlayEditorSection({
 
   return (
     <section className="mb-8">
-      <SectionHeader
-        title="Mode overlays & prompts"
-        description="Configure the system prompt overlay and suggested prompts for each mode."
-      />
-
-      <Card className="p-0 overflow-hidden">
-        {/* Mode tabs */}
-        <div className="flex overflow-x-auto border-b border-zinc-800/70">
-          {ALL_MODES.map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setActiveTab(mode)}
-              className={`whitespace-nowrap px-4 py-3 text-xs font-medium transition-colors ${
-                activeTab === mode
-                  ? "border-b-2 border-zinc-300 text-zinc-200"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
-            >
-              {MODE_LABELS[mode]}
-            </button>
-          ))}
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-semibold text-zinc-200">Mode overlays &amp; prompts</h2>
+          <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+            Configure the system prompt overlay and suggested prompts for each mode.
+          </p>
         </div>
+        <button
+          onClick={() => setIsUnlocked((v) => !v)}
+          className="mt-0.5 shrink-0 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-zinc-500 hover:text-zinc-200"
+        >
+          {isUnlocked ? "Lock" : "Edit"}
+        </button>
+      </div>
 
-        <div className="space-y-6 p-5 sm:p-6">
-          {/* Overlay editor */}
-          <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-400">
-              System prompt overlay
-            </label>
-            <p className="mb-2 text-xs text-zinc-600">
-              Appended to the base system prompt when this mode is active. Leave blank to use only the base.
-            </p>
-            <textarea
-              value={overlays[activeTab]}
-              onChange={(e) =>
-                setOverlays((prev) => ({ ...prev, [activeTab]: e.target.value }))
-              }
-              placeholder={`Overlay instructions for ${MODE_LABELS[activeTab]} mode…`}
-              rows={7}
-              className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2.5 font-mono text-sm text-zinc-200 placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500"
-            />
-            <div className="mt-2 flex items-center gap-3">
-              <button
-                onClick={() => handleSaveOverlay(activeTab)}
-                disabled={overlaySaveStates[activeTab] === "saving"}
-                className="rounded-lg bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+      {/* Collapsed summary — shown by default */}
+      {!isUnlocked && (
+        <Card>
+          <div className="flex flex-wrap items-center gap-2">
+            {ALL_MODES.map((mode) => (
+              <span
+                key={mode}
+                className="rounded-md bg-zinc-800 px-2.5 py-1 text-xs text-zinc-400"
               >
-                {overlaySaveStates[activeTab] === "saving" ? "Saving…" : "Save overlay"}
+                {MODE_LABELS[mode].split(" (")[0]}
+              </span>
+            ))}
+            <span className="ml-auto text-xs text-zinc-600">{ALL_MODES.length} modes</span>
+          </div>
+        </Card>
+      )}
+
+      {/* Full editor — shown only when explicitly unlocked */}
+      {isUnlocked && (
+        <Card className="p-0 overflow-hidden">
+          {/* Mode tabs */}
+          <div className="flex overflow-x-auto border-b border-zinc-800/70">
+            {ALL_MODES.map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setActiveTab(mode)}
+                className={`whitespace-nowrap px-4 py-3 text-xs font-medium transition-colors ${
+                  activeTab === mode
+                    ? "border-b-2 border-zinc-300 text-zinc-200"
+                    : "text-zinc-500 hover:text-zinc-300"
+                }`}
+              >
+                {MODE_LABELS[mode]}
               </button>
-              {overlaySaveStates[activeTab] === "saved" && (
-                <span className="text-xs text-emerald-400">✓ Saved</span>
-              )}
-              {overlaySaveStates[activeTab] === "error" && (
-                <span className="text-xs text-red-400">Save failed</span>
-              )}
-            </div>
+            ))}
           </div>
 
-          {/* Suggested prompts editor */}
-          <div>
-            <label className="mb-1 block text-xs font-medium text-zinc-400">
-              Suggested prompts
-            </label>
-            <p className="mb-2 text-xs text-zinc-600">
-              One prompt per line. Shown as clickable chips in the chat empty state for this mode.
-            </p>
-            <textarea
-              value={prompts[activeTab]}
-              onChange={(e) =>
-                setPrompts((prev) => ({ ...prev, [activeTab]: e.target.value }))
-              }
-              placeholder={PROMPT_PLACEHOLDERS[activeTab]}
-              rows={4}
-              className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500"
-            />
-            <div className="mt-2 flex items-center gap-3">
-              <button
-                onClick={() => handleSavePrompts(activeTab)}
-                disabled={promptSaveStates[activeTab] === "saving"}
-                className="rounded-lg bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {promptSaveStates[activeTab] === "saving" ? "Saving…" : "Save prompts"}
-              </button>
-              {promptSaveStates[activeTab] === "saved" && (
-                <span className="text-xs text-emerald-400">✓ Saved</span>
-              )}
-              {promptSaveStates[activeTab] === "error" && (
-                <span className="text-xs text-red-400">Save failed</span>
-              )}
+          <div className="space-y-6 p-5 sm:p-6">
+            {/* Overlay editor */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-zinc-400">
+                System prompt overlay
+              </label>
+              <p className="mb-2 text-xs text-zinc-600">
+                Appended to the base system prompt when this mode is active. Leave blank to use only the base.
+              </p>
+              <textarea
+                value={overlays[activeTab]}
+                onChange={(e) =>
+                  setOverlays((prev) => ({ ...prev, [activeTab]: e.target.value }))
+                }
+                placeholder={`Overlay instructions for ${MODE_LABELS[activeTab]} mode…`}
+                rows={7}
+                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2.5 font-mono text-sm text-zinc-200 placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500"
+              />
+              <div className="mt-2 flex items-center gap-3">
+                <button
+                  onClick={() => handleSaveOverlay(activeTab)}
+                  disabled={overlaySaveStates[activeTab] === "saving"}
+                  className="rounded-lg bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {overlaySaveStates[activeTab] === "saving" ? "Saving…" : "Save overlay"}
+                </button>
+                {overlaySaveStates[activeTab] === "saved" && (
+                  <span className="text-xs text-emerald-400">✓ Saved</span>
+                )}
+                {overlaySaveStates[activeTab] === "error" && (
+                  <span className="text-xs text-red-400">Save failed</span>
+                )}
+              </div>
+            </div>
+
+            {/* Suggested prompts editor */}
+            <div>
+              <label className="mb-1 block text-xs font-medium text-zinc-400">
+                Suggested prompts
+              </label>
+              <p className="mb-2 text-xs text-zinc-600">
+                One prompt per line. Shown as clickable chips in the chat empty state for this mode.
+              </p>
+              <textarea
+                value={prompts[activeTab]}
+                onChange={(e) =>
+                  setPrompts((prev) => ({ ...prev, [activeTab]: e.target.value }))
+                }
+                placeholder={PROMPT_PLACEHOLDERS[activeTab]}
+                rows={4}
+                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500"
+              />
+              <div className="mt-2 flex items-center gap-3">
+                <button
+                  onClick={() => handleSavePrompts(activeTab)}
+                  disabled={promptSaveStates[activeTab] === "saving"}
+                  className="rounded-lg bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {promptSaveStates[activeTab] === "saving" ? "Saving…" : "Save prompts"}
+                </button>
+                {promptSaveStates[activeTab] === "saved" && (
+                  <span className="text-xs text-emerald-400">✓ Saved</span>
+                )}
+                {promptSaveStates[activeTab] === "error" && (
+                  <span className="text-xs text-red-400">Save failed</span>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      )}
     </section>
   );
 }
@@ -946,6 +977,7 @@ function SystemPromptSection({
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isUnlocked, setIsUnlocked] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/system-prompt", {
@@ -1002,10 +1034,23 @@ function SystemPromptSection({
 
   return (
     <section className="mb-8">
-      <SectionHeader
-        title="System Prompt"
-        description="The base prompt sent to the LLM on every chat request. Saving here takes effect immediately — no environment variable update needed."
-      />
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-semibold text-zinc-200">System Prompt</h2>
+          <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+            The base prompt sent to the LLM on every chat request. Saving here takes effect
+            immediately — no environment variable update needed.
+          </p>
+        </div>
+        {data && (
+          <button
+            onClick={() => setIsUnlocked((v) => !v)}
+            className="mt-0.5 shrink-0 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-zinc-500 hover:text-zinc-200"
+          >
+            {isUnlocked ? "Lock" : "Edit"}
+          </button>
+        )}
+      </div>
 
       {loadError && (
         <div className="mb-4 rounded-xl border border-red-900/60 bg-red-950/60 px-4 py-3 text-sm text-red-400">
@@ -1013,7 +1058,31 @@ function SystemPromptSection({
         </div>
       )}
 
-      {data && (
+      {/* Collapsed summary — shown by default */}
+      {data && !isUnlocked && (
+        <Card>
+          <div className="flex flex-wrap items-center gap-3">
+            <span
+              className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
+                data.source === "database"
+                  ? "bg-emerald-950/60 text-emerald-400"
+                  : "bg-amber-950/60 text-amber-400"
+              }`}
+            >
+              {data.source === "database" ? "● Database" : "⚠ " + data.source.replace("_", " ")}
+            </span>
+            <span className="text-xs text-zinc-500">{content.length.toLocaleString()} chars</span>
+            {data.updated_at && (
+              <span className="text-xs text-zinc-600">
+                Last saved {new Date(data.updated_at).toLocaleString()}
+              </span>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Full editor — shown only when explicitly unlocked */}
+      {data && isUnlocked && (
         <Card>
           <div className="space-y-4">
             {/* Source badge */}
