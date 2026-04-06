@@ -29,6 +29,9 @@ const MODE_DESCRIPTIONS: Record<string, string> = {
   buddy: "Casual and playful, with a healthy dose of friendly roasting",
 };
 
+/** Character count above which an assistant message is collapsed by default. */
+const COLLAPSE_THRESHOLD = 600;
+
 export default function ChatPage() {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -44,8 +47,22 @@ export default function ChatPage() {
   const [canSwitchModes, setCanSwitchModes] = useState(false);
   const [switchConfirm, setSwitchConfirm] = useState<string | null>(null);
   const [promptsByMode, setPromptsByMode] = useState<Record<string, string[]>>({});
+  // Tracks which long assistant messages have been manually expanded.
+  const [expandedMessages, setExpandedMessages] = useState<Set<number>>(new Set());
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const toggleExpanded = (index: number) => {
+    setExpandedMessages((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  };
 
   // Resolve recruiter token, mode config, and persisted history on mount.
   useEffect(() => {
@@ -376,29 +393,49 @@ export default function ChatPage() {
                 <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-zinc-100 px-4 py-2.5 text-sm leading-relaxed text-zinc-900 shadow-sm sm:max-w-[78%]">
                   {msg.content}
                 </div>
-              ) : (
-                <div className="max-w-[92%] rounded-2xl rounded-bl-sm border border-zinc-700/40 bg-zinc-800/80 px-4 py-3 text-sm leading-relaxed text-zinc-100 sm:max-w-[85%]">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                      strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-                      em: ({ children }) => <em className="italic">{children}</em>,
-                      ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-1">{children}</ul>,
-                      ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-1">{children}</ol>,
-                      li: ({ children }) => <li>{children}</li>,
-                      h1: ({ children }) => <h1 className="mb-2 text-base font-semibold text-white">{children}</h1>,
-                      h2: ({ children }) => <h2 className="mb-1.5 text-sm font-semibold text-white">{children}</h2>,
-                      h3: ({ children }) => <h3 className="mb-1 text-sm font-medium text-zinc-300">{children}</h3>,
-                      a: ({ href, children }) => <a href={href} className="text-zinc-300 underline hover:text-white" target="_blank" rel="noreferrer">{children}</a>,
-                      code: ({ children }) => <code className="rounded bg-zinc-700 px-1 py-0.5 font-mono text-xs text-zinc-200">{children}</code>,
-                      hr: () => <hr className="my-2 border-zinc-700" />,
-                    }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
-                </div>
-              )}
+              ) : (() => {
+                const isLong = msg.content.length > COLLAPSE_THRESHOLD;
+                const isExpanded = expandedMessages.has(i);
+                return (
+                  <div className="max-w-[92%] rounded-2xl rounded-bl-sm border border-zinc-700/40 bg-zinc-800/80 px-4 py-3 text-sm leading-relaxed text-zinc-100 sm:max-w-[85%]">
+                    {/* Content — clipped with gradient fade when collapsed */}
+                    <div className={`relative ${isLong && !isExpanded ? "max-h-[180px] overflow-hidden" : ""}`}>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                          strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+                          em: ({ children }) => <em className="italic">{children}</em>,
+                          ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-1">{children}</ul>,
+                          ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-1">{children}</ol>,
+                          li: ({ children }) => <li>{children}</li>,
+                          h1: ({ children }) => <h1 className="mb-2 text-base font-semibold text-white">{children}</h1>,
+                          h2: ({ children }) => <h2 className="mb-1.5 text-sm font-semibold text-white">{children}</h2>,
+                          h3: ({ children }) => <h3 className="mb-1 text-sm font-medium text-zinc-300">{children}</h3>,
+                          a: ({ href, children }) => <a href={href} className="text-zinc-300 underline hover:text-white" target="_blank" rel="noreferrer">{children}</a>,
+                          code: ({ children }) => <code className="rounded bg-zinc-700 px-1 py-0.5 font-mono text-xs text-zinc-200">{children}</code>,
+                          hr: () => <hr className="my-2 border-zinc-700" />,
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                      {/* Gradient fade — only shown when clipped */}
+                      {isLong && !isExpanded && (
+                        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-zinc-800/90 to-transparent" />
+                      )}
+                    </div>
+                    {/* Read more / Show less toggle */}
+                    {isLong && (
+                      <button
+                        onClick={() => toggleExpanded(i)}
+                        className="mt-2 text-xs text-zinc-500 transition-colors hover:text-zinc-300"
+                      >
+                        {isExpanded ? "Show less ↑" : "Read more ↓"}
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
 
               {msg.role === "assistant" && msg.provider && (
                 <span className="ml-1 text-xs text-zinc-600">
