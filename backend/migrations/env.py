@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import ssl
 import sys
 from logging.config import fileConfig
 
@@ -35,7 +36,12 @@ def _get_url() -> tuple[str, dict]:
     connect_args: dict = {}
     if "sslmode=require" in url:
         url = url.replace("?sslmode=require", "").replace("&sslmode=require", "")
-        connect_args["ssl"] = True
+        # DO managed Postgres uses a private CA not in the system trust store.
+        # ssl=True would fail cert verification; use an explicit context instead.
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        connect_args["ssl"] = ctx
     return url, connect_args
 
 
