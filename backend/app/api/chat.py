@@ -184,9 +184,13 @@ async def chat(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     # --- Compose system prompt and call LLM ---
+    # app.state.system_prompt is set at startup from the DB and updated when
+    # the admin saves via POST /api/admin/system-prompt. Falls back to None,
+    # which makes compose_system_prompt load from env var / file / stub.
     system_prompt = compose_system_prompt(
         mode=requested_mode,
         mode_overlays={requested_mode: mode_row.overlay},
+        base_override=getattr(request.app.state, "system_prompt", None),
     )
 
     try:

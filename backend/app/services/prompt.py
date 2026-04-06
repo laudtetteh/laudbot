@@ -60,7 +60,11 @@ def load_mode_overlay(mode: str) -> str:
     return ""
 
 
-def compose_system_prompt(mode: str, mode_overlays: dict[str, str]) -> str:
+def compose_system_prompt(
+    mode: str,
+    mode_overlays: dict[str, str],
+    base_override: str | None = None,
+) -> str:
     """Compose the final system prompt for a given mode.
 
     Injects an explicit ACTIVE MODE declaration before the overlay so the model
@@ -69,11 +73,14 @@ def compose_system_prompt(mode: str, mode_overlays: dict[str, str]) -> str:
     Args:
         mode: The active mode slug for this conversation.
         mode_overlays: The current overlay dict from app.state.mode_overlays.
+        base_override: If provided, use this as the base prompt instead of
+            loading from env var / file. Set from app.state.system_prompt when
+            the admin has saved a custom prompt via the admin panel.
 
     Returns:
         The composed system prompt string.
     """
-    base = load_base_prompt()
+    base = base_override if base_override is not None else load_base_prompt()
     overlay = mode_overlays.get(mode, "").strip()
 
     # Explicit mode lock — placed before the overlay so it reads as a hard constraint.

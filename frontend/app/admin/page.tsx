@@ -914,6 +914,173 @@ function LLMProviderSection({
 }
 
 // ---------------------------------------------------------------------------
+// System prompt editor section
+// ---------------------------------------------------------------------------
+
+interface SystemPromptResponse {
+  content: string;
+  source: "database" | "env_var" | "file" | "fallback";
+  updated_at: string | null;
+}
+
+const SOURCE_LABELS: Record<SystemPromptResponse["source"], string> = {
+  database: "Saved in database",
+  env_var: "Loaded from environment variable — save here to move it to the database",
+  file: "Loaded from file — save here to move it to the database",
+  fallback: "Using fallback stub — no prompt has been configured",
+};
+
+/**
+ * Textarea for reading and updating the base system prompt.
+ * Saves to the database and takes effect immediately — no DO secret update needed.
+ */
+function SystemPromptSection({
+  token,
+  onSessionExpired,
+}: {
+  token: string;
+  onSessionExpired: () => void;
+}) {
+  const [data, setData] = useState<SystemPromptResponse | null>(null);
+  const [content, setContent] = useState("");
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/system-prompt", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (res) => {
+        if (res.status === 401) { onSessionExpired(); return; }
+        if (!res.ok) throw new Error(`Load failed (${res.status})`);
+        return res.json();
+      })
+      .then((d?: SystemPromptResponse) => {
+        if (!d) return;
+        setData(d);
+        setContent(d.content);
+      })
+      .catch((err: unknown) => {
+        setLoadError(err instanceof Error ? err.message : "Failed to load system prompt.");
+      });
+  }, [token, onSessionExpired]);
+
+  const isDirty = content !== (data?.content ?? "");
+
+  async function handleSave() {
+    setSaveState("saving");
+    setErrorMessage(null);
+
+    try {
+      const res = await fetch("/api/admin/system-prompt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content }),
+      });
+
+      if (res.status === 401) { onSessionExpired(); return; }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { detail?: string }).detail ?? `Save failed (${res.status})`);
+      }
+
+      const updated: SystemPromptResponse = await res.json();
+      setData(updated);
+      setContent(updated.content);
+      setSaveState("saved");
+      setTimeout(() => setSaveState("idle"), 3000);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Something went wrong.");
+      setSaveState("error");
+    }
+  }
+
+  return (
+    <section className="mb-8">
+      <SectionHeader
+        title="System Prompt"
+        description="The base prompt sent to the LLM on every chat request. Saving here takes effect immediately — no environment variable update needed."
+      />
+
+      {loadError && (
+        <div className="mb-4 rounded-xl border border-red-900/60 bg-red-950/60 px-4 py-3 text-sm text-red-400">
+          {loadError}
+        </div>
+      )}
+
+      {data && (
+        <Card>
+          <div className="space-y-4">
+            {/* Source badge */}
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
+                  data.source === "database"
+                    ? "bg-emerald-950/60 text-emerald-400"
+                    : "bg-amber-950/60 text-amber-400"
+                }`}
+              >
+                {data.source === "database" ? "● Database" : "⚠ " + data.source.replace("_", " ")}
+              </span>
+              {data.source !== "database" && (
+                <span className="text-xs text-zinc-500">
+                  {SOURCE_LABELS[data.source]}
+                </span>
+              )}
+              {data.updated_at && (
+                <span className="ml-auto text-xs text-zinc-600">
+                  Last saved {new Date(data.updated_at).toLocaleString()}
+                </span>
+              )}
+            </div>
+
+            {/* Textarea */}
+            <textarea
+              value={content}
+              onChange={(e) => {
+                setContent(e.target.value);
+                setSaveState("idle");
+              }}
+              rows={20}
+              spellCheck={false}
+              className="w-full resize-y rounded-lg border border-zinc-700/60 bg-zinc-800 px-4 py-3 font-mono text-xs leading-relaxed text-zinc-200 outline-none transition-colors focus:border-zinc-500"
+            />
+
+            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-800/60 pt-4">
+              <span className="text-xs text-zinc-600">
+                {content.length.toLocaleString()} chars
+              </span>
+              <div className="ml-auto flex items-center gap-4">
+                {saveState === "saved" && (
+                  <span className="text-xs text-emerald-400">
+                    ✓ Saved — takes effect on next chat request
+                  </span>
+                )}
+                {saveState === "error" && errorMessage && (
+                  <span className="text-xs text-red-400">{errorMessage}</span>
+                )}
+                <button
+                  onClick={handleSave}
+                  disabled={saveState === "saving" || !isDirty || !content.trim()}
+                  className="rounded-lg bg-zinc-700 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {saveState === "saving" ? "Saving…" : "Save prompt"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Admin controls (shown after login)
 // ---------------------------------------------------------------------------
 
@@ -951,6 +1118,7 @@ function AdminControls({ token, onLogout }: { token: string; onLogout: () => voi
 
       <InviteSection token={token} onSessionExpired={onLogout} modesConfig={modesConfig} />
       <GlobalModesSection token={token} onSessionExpired={onLogout} modesConfig={modesConfig} onModesChange={setModesConfig} />
+      <SystemPromptSection token={token} onSessionExpired={onLogout} />
       <OverlayEditorSection token={token} onSessionExpired={onLogout} />
       <LLMProviderSection token={token} onSessionExpired={onLogout} />
 

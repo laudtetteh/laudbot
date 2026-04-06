@@ -1,9 +1,10 @@
 """SQLAlchemy ORM models.
 
-Three tables:
+Four tables:
 - ``invitations``   — invite tokens and recruiter config (replaces app.state.invite_tokens)
 - ``mode_config``   — per-mode enabled flag, overlay, and prompts (replaces app.state.modes_*)
 - ``chat_messages`` — persisted chat history keyed to recruiter_id
+- ``system_config`` — key/value store for admin-editable runtime config (e.g. system prompt)
 """
 from __future__ import annotations
 
@@ -80,5 +81,22 @@ class ChatMessage(Base):
     provider: Mapped[str | None] = mapped_column(String(50), nullable=True)
     model: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=datetime.utcnow
+    )
+
+
+class SystemConfig(Base):
+    """Key/value store for admin-editable runtime configuration.
+
+    Currently used for a single row: key='system_prompt'.
+    Persists across restarts (unlike app.state). Loaded into app.state at
+    startup and updated in-memory on admin save — no per-request DB query.
+    """
+
+    __tablename__ = "system_config"
+
+    key: Mapped[str] = mapped_column(String(100), primary_key=True)
+    value: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
