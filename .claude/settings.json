@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/beaconavenue/code/laudbot/.claude/hooks/pre-tool.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/beaconavenue/code/laudbot/.claude/hooks/post-tool.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

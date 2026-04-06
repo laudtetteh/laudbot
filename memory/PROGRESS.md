@@ -5,6 +5,65 @@
 
 ---
 
+## 2026-04-06 — fix: SSL cert verification for DO managed Postgres (PR #64)
+
+- `ssl=True` in asyncpg uses Python default SSL which verifies the server cert chain
+- DO managed Postgres uses a private CA not in the system trust store → `SSLCertVerificationError`
+- Fix: build `ssl.SSLContext` with `check_hostname=False` and `CERT_NONE` in both `base.py` and `migrations/env.py`
+- Connection remains TLS-encrypted; only chain verification is skipped (standard pattern for managed cloud DBs)
+- PR #64 merged — branch: fix/ssl-cert-verification
+
+---
+
+## 2026-04-06 — feat: chat persist logging + admin db-status endpoint (PR #63)
+
+- `logger.info` after `db.commit()` in chat endpoint — confirms writes in DO Runtime Logs
+- `GET /api/admin/db-status` returns row counts for all 3 tables + Alembic version (admin-protected)
+- Diagnostic tool to confirm schema state and whether chat messages are landing
+- PR #63 merged — branch: feat/backend-db-diagnostics
+
+---
+
+## 2026-04-06 — fix: surface history fetch errors + empty-mode filter (PR #62)
+
+- Silent `.catch(() => {})` was masking all server errors on `GET /api/chat/history`
+- Added `historyError` state + dismissible amber warning banner in message area
+- Mode filter fallback: if `active_mode` is empty string, show all history instead of filtering to nothing
+- Root cause of "no history on reload" was cross-browser testing (Chrome vs Firefox have separate sessionStorage)
+- PR #62 merged — branch: fix/history-not-loading
+
+---
+
+## 2026-04-06 — feat: chat history displayed on page load (PR #60)
+
+- `GET /api/chat/history` fetched on mount, pre-populates message thread keyed to recruiter JWT
+- `allHistory` state stores full cross-mode history; `messages` filtered by `activeMode`
+- Mode switch restores persisted history for the new mode instead of clearing to empty
+- `historyLoading` gates empty state and suggested prompts during fetch
+- PR #60 merged — branch: feat/chat-history-frontend
+
+---
+
+## 2026-04-06 — fix: strip sslmode from Alembic migrations env (PR #61)
+
+- `migrations/env.py` built its own SQLAlchemy engine independently — was not inheriting the SSL fix from `base.py`
+- `_get_url()` updated to return `(url, connect_args)` tuple; strips `sslmode=require` and passes `ssl=True`
+- Alembic migrations now connect successfully to DO managed Postgres
+- PR #61 merged — branch: fix/alembic-ssl
+
+---
+
+## 2026-04-06 — chore: gitleaks secret scanning + authoritative .env.example (PR #58)
+
+- `.gitleaks.toml` created — extends default ruleset, allowlists placeholder patterns
+- `.husky/pre-commit` rewritten to run `gitleaks protect --staged` with explicit binary path checks
+- `.env.example` rewritten as authoritative reference with all credential-shaped values as `xxxx`
+- `docker-compose.yml` cleaned — no inline credential defaults
+- Full history squash to purge any prior commits with real-looking secrets
+- PR #58 merged — branch: fix/secret-scanning
+
+---
+
 ## 2026-04-06 — feat: PostgreSQL + pgvector persistence (PR #56, closes #55)
 
 - Replaced all in-memory `app.state` stores with async SQLAlchemy + asyncpg + Alembic

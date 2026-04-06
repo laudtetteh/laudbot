@@ -51,5 +51,5 @@ Thumbs.db
 *.swo
 
 # Agentic coding — personal session state (don't commit)
-memory/CONTEXT_SNAPSHOT.md
+# Note: CONTEXT_SNAPSHOT.md IS tracked — future Claude sessions need it from the repo
 prompts/history
