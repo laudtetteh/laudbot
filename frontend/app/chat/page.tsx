@@ -37,6 +37,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [activeMode, setActiveMode] = useState<string>("");
   const [allowedModes, setAllowedModes] = useState<string[]>([]);
@@ -77,23 +78,29 @@ export default function ChatPage() {
     fetch("/api/chat/history", {
       headers: { Authorization: `Bearer ${stored}` },
     })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!data?.messages) return;
-        const history: HistoryMessage[] = data.messages.map(
-          (m: { role: string; content: string; provider?: string; model?: string; mode: string }) => ({
-            role: m.role as "user" | "assistant",
-            content: m.content,
-            provider: m.provider,
-            model: m.model,
-            mode: m.mode,
-          })
-        );
-        setAllHistory(history);
-        // Show only the messages for the current active mode.
-        setMessages(history.filter((m) => m.mode === mode));
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`History fetch failed (${res.status})`);
+        }
+        return res.json();
       })
-      .catch(() => {/* non-fatal — start with empty conversation */})
+      .then((data: { messages?: Array<{ role: string; content: string; provider?: string; model?: string; mode: string }> }) => {
+        if (!data?.messages) return;
+        const history: HistoryMessage[] = data.messages.map((m) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+          provider: m.provider,
+          model: m.model,
+          mode: m.mode,
+        }));
+        setAllHistory(history);
+        // Filter to the active mode — fall back to all history if mode is unknown.
+        setMessages(mode ? history.filter((m) => m.mode === mode) : history);
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        setHistoryError(`Couldn't load conversation history: ${msg}`);
+      })
       .finally(() => setHistoryLoading(false));
   }, [router]);
 
@@ -306,6 +313,20 @@ export default function ChatPage() {
           {historyLoading && (
             <div className="flex flex-1 items-center justify-center">
               <p className="text-xs text-zinc-700 animate-pulse">Loading history…</p>
+            </div>
+          )}
+
+          {/* History fetch error — non-fatal, dismissible */}
+          {historyError && !historyLoading && (
+            <div className="flex items-start justify-between gap-2 rounded-lg border border-amber-900/40 bg-amber-950/40 px-3 py-2 text-xs text-amber-500">
+              <span>{historyError}</span>
+              <button
+                onClick={() => setHistoryError(null)}
+                className="shrink-0 text-amber-700 hover:text-amber-400"
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
             </div>
           )}
 
