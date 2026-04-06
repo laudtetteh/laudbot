@@ -12,6 +12,11 @@ interface Message {
   model?: string;
 }
 
+/** Message as stored in the DB — includes mode for cross-mode history filtering. */
+interface HistoryMessage extends Message {
+  mode: string;
+}
+
 const MODE_LABELS: Record<string, string> = {
   recruiter: "Recruiter",
   coworker: "Co-worker",
@@ -27,6 +32,8 @@ const MODE_DESCRIPTIONS: Record<string, string> = {
 export default function ChatPage() {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [allHistory, setAllHistory] = useState<HistoryMessage[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +46,7 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Resolve recruiter token and mode config on mount.
+  // Resolve recruiter token, mode config, and persisted history on mount.
   useEffect(() => {
     const stored = sessionStorage.getItem("recruiter_token");
     if (!stored) {
@@ -64,9 +71,33 @@ export default function ChatPage() {
         if (data?.prompts_by_mode) setPromptsByMode(data.prompts_by_mode);
       })
       .catch(() => {/* non-fatal */});
+
+    // Fetch persisted history and pre-populate the message thread.
+    setHistoryLoading(true);
+    fetch("/api/chat/history", {
+      headers: { Authorization: `Bearer ${stored}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data?.messages) return;
+        const history: HistoryMessage[] = data.messages.map(
+          (m: { role: string; content: string; provider?: string; model?: string; mode: string }) => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+            provider: m.provider,
+            model: m.model,
+            mode: m.mode,
+          })
+        );
+        setAllHistory(history);
+        // Show only the messages for the current active mode.
+        setMessages(history.filter((m) => m.mode === mode));
+      })
+      .catch(() => {/* non-fatal — start with empty conversation */})
+      .finally(() => setHistoryLoading(false));
   }, [router]);
 
-  // Scroll to bottom when new messages arrive.
+  // Scroll to bottom when new messages arrive or history loads.
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
@@ -85,13 +116,16 @@ export default function ChatPage() {
   function applyModeSwitch(mode: string) {
     setActiveMode(mode);
     sessionStorage.setItem("active_mode", mode);
-    setMessages([]);
+    // Restore persisted history for the new mode rather than clearing to empty.
+    setMessages(allHistory.filter((m) => m.mode === mode));
     setError(null);
     setSwitchConfirm(null);
     inputRef.current?.focus();
   }
 
   function handleNewConversation() {
+    // Clears the current view only — history is preserved in the DB and
+    // will reappear on the next page load.
     setMessages([]);
     setError(null);
     inputRef.current?.focus();
@@ -139,14 +173,20 @@ export default function ChatPage() {
       }
 
       const data = await res.json();
-      setMessages((prev) => [
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: data.response,
+        provider: data.provider,
+        model: data.model,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      // Keep allHistory in sync so mode switches reflect new messages.
+      setAllHistory((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content: data.response,
-          provider: data.provider,
-          model: data.model,
-        },
+        { ...userMessage, mode: activeMode },
+        { ...assistantMessage, mode: activeMode },
       ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -262,8 +302,15 @@ export default function ChatPage() {
         {/* Message area — fills remaining space; dimmed when mode-switch dialog is open */}
         <div className={`messages-scroll mb-3 flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-4 transition-opacity duration-200 ${switchConfirm ? "pointer-events-none opacity-30" : ""}`}>
 
-          {/* Empty state */}
-          {messages.length === 0 && !loading && (
+          {/* History loading indicator */}
+          {historyLoading && (
+            <div className="flex flex-1 items-center justify-center">
+              <p className="text-xs text-zinc-700 animate-pulse">Loading history…</p>
+            </div>
+          )}
+
+          {/* Empty state — only shown once history fetch is complete */}
+          {!historyLoading && messages.length === 0 && !loading && (
             <div className="flex flex-1 flex-col items-center justify-center gap-6 py-8">
               <div className="text-center animate-fade-in">
                 <p className="mb-1 text-sm font-medium text-zinc-400">
