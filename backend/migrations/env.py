@@ -24,16 +24,26 @@ if config.config_file_name:
 target_metadata = Base.metadata
 
 
-def _get_url() -> str:
-    """Read DATABASE_URL from env and ensure it uses the asyncpg scheme."""
+def _get_url() -> tuple[str, dict]:
+    """Read DATABASE_URL from env, convert scheme, and strip sslmode.
+
+    asyncpg does not accept sslmode= in the URL — it must be passed as a
+    connect_arg instead. Returns the cleaned URL and any extra connect_args.
+    """
     raw = os.environ["DATABASE_URL"]
-    return raw.replace("postgresql://", "postgresql+asyncpg://", 1)
+    url = raw.replace("postgresql://", "postgresql+asyncpg://", 1)
+    connect_args: dict = {}
+    if "sslmode=require" in url:
+        url = url.replace("?sslmode=require", "").replace("&sslmode=require", "")
+        connect_args["ssl"] = True
+    return url, connect_args
 
 
 def run_migrations_offline() -> None:
     """Run migrations against a URL string (no live connection needed)."""
+    url, _ = _get_url()
     context.configure(
-        url=_get_url(),
+        url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -51,7 +61,10 @@ def _do_run_migrations(connection):
 
 async def run_migrations_online() -> None:
     """Run migrations against a live async connection."""
-    connectable = create_async_engine(_get_url(), poolclass=pool.NullPool)
+    url, connect_args = _get_url()
+    connectable = create_async_engine(
+        url, poolclass=pool.NullPool, connect_args=connect_args
+    )
     async with connectable.connect() as connection:
         await connection.run_sync(_do_run_migrations)
     await connectable.dispose()
