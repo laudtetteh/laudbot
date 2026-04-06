@@ -5,6 +5,30 @@
 
 ---
 
+## 2026-04-06 — feat: PostgreSQL + pgvector persistence (PR #56, closes #55)
+
+- Replaced all in-memory `app.state` stores with async SQLAlchemy + asyncpg + Alembic
+- `backend/app/db/` — async engine, session factory, Base, ORM models (Invitation, ModeConfig, ChatMessage)
+- `backend/migrations/` — Alembic async env + initial migration (3 tables + pgvector extension)
+- lifespan handler runs `alembic upgrade head` + seeds mode_config via `ON CONFLICT DO NOTHING`
+- Invite create/accept fully DB-backed; accept is idempotent (reuses existing recruiter_id)
+- Mode config reads/writes to DB; both chat turns persisted; new `GET /api/chat/history` endpoint
+- `docker-compose.yml` — pgvector/pgvector:pg16 service with healthcheck + depends_on: service_healthy
+- `.do/app.yaml` — managed Postgres 16 cluster, region `sfo`, `DATABASE_URL: ${db.DATABASE_URL}`
+- `docs/DEPLOYMENT.md` — managed Postgres setup steps, updated env table, updated limitations
+- `.env.example` — DATABASE_URL documented with scheme notes
+- Verified in-container: migrations clean, all 3 tables present, full invite + chat flow persists
+
+---
+
+## 2026-04-06 — chore: post-merge housekeeping + Next.js CVE patch (PRs #52, #53, #54)
+
+- PR #52: post-merge docs after PR #51 (PROGRESS.md, CONTEXT_SNAPSHOT.md)
+- PR #53: GitHub issue #55 filed for PostgreSQL persistence
+- PR #54: Next.js patched from 15.3.0 → 15.3.2 (CVE fix, stable 15.x)
+
+---
+
 ## 2026-04-05 — fix: chat header pill and CTA alignment on mobile (PR #51)
 
 - Mode pills, "I am a…" label, and Exit CTA were wrapping to a right-aligned second line on narrow viewports

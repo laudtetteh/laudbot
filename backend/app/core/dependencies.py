@@ -1,12 +1,33 @@
+"""FastAPI dependency functions.
+
+Provides:
+- ``get_db``              — yields an async DB session per request
+- ``get_current_admin``   — validates admin JWT and returns payload
+- ``get_current_recruiter`` — validates recruiter JWT and returns payload
+"""
 from __future__ import annotations
+
+from typing import AsyncGenerator
 
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decode_token
+from app.db.base import AsyncSessionLocal
 
 _bearer = HTTPBearer(auto_error=False)
+
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Yield a SQLAlchemy async session, closing it when the request is done.
+
+    Yields:
+        An ``AsyncSession`` bound to the request lifecycle.
+    """
+    async with AsyncSessionLocal() as session:
+        yield session
 
 
 def _extract_payload(
