@@ -6,13 +6,16 @@ successful exchange. ``app.state.llm_config`` remains in-memory.
 """
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 from app.core.dependencies import get_current_recruiter, get_db
 from app.db.models import ChatMessage, ModeConfig
@@ -230,6 +233,12 @@ async def chat(
         )
     )
     await db.commit()
+    logger.info(
+        "chat persisted | recruiter_id=%s | mode=%s | provider=%s",
+        recruiter_id,
+        requested_mode,
+        config.provider,
+    )
 
     return ChatResponse(
         response=response_text,
