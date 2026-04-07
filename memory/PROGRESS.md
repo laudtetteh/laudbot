@@ -5,6 +5,40 @@
 
 ---
 
+## 2026-04-07 — feat(content): env var + file fallback for overlays and suggested prompts (PR #91, closes #90)
+
+- `load_mode_overlay()` now checks `OVERLAY_{MODE}` env var before file fallback — prod parity without gitignored files
+- New `load_mode_prompts()` function: checks `SUGGESTED_PROMPTS_{MODE}` env var, then `data/approved/prompts/{mode}.txt`, then empty list
+- `_seed_mode_config()` seeds prompts via `load_mode_prompts()` instead of hardcoded `[]`
+- `data/approved/prompts/` directory added with `.gitkeep`, three `.txt.example` files with real prompts for all modes
+- `.env.example` documents all 6 new env vars with format examples and LOCAL/DO guidance
+- `fix(frontend)`: `suppressHydrationWarning` added to `<html>` in `layout.tsx` — silences dark-mode anti-flash class mismatch
+- `system_prompt.md` updated: resolution order fix (env var → file → stub), stale "recruiter"/"RECRUITER mode" refs → "visitor", "no DB lookup" removed, "migration path to Postgres" → "on Postgres", PR count 64 → 90+
+- `overlays/buddy.md` (local): "Recruiter and Co-worker" → "Professional and Peer" (was already fixed locally; DB + DO updated manually)
+
+---
+
+## 2026-04-07 — feat(chat): conversation_id — fix New Chat bug, add history sidebar (PR #89, closes #88)
+
+- Migration 006: adds `conversation_id UUID` to `chat_messages`; backfills existing rows by grouping per `visitor_id`; creates index
+- `ChatMessage` ORM: `conversation_id` field added
+- `ChatRequest`/`ChatResponse`: `conversation_id` field added
+- `POST /api/chat`: accepts `conversation_id` from client; falls back to `uuid4()` if absent; returns it in response
+- `GET /api/chat/history`: optional `?conversation_id=` param; defaults to most recent conversation
+- New `GET /api/chat/conversations`: CTE query — up to 20 conversations, newest first, with mode/preview/timestamp
+- Frontend: `activeConversationId` state; sidebar (260px, mobile-hidden with hamburger); mode badge per conversation; `loadConversation()` syncs mode pills on click; New Chat + mode switch both generate fresh UUID; `refreshConversations()` called after first message in a new conversation
+- `fix`: `suppressHydrationWarning` on `<html>` (dark-mode anti-flash; appeared first in this PR)
+
+---
+
+## 2026-04-07 — feat(email): redesign invite template with navy brand palette (PR #87, closes #86)
+
+- Full HTML email rewrite: white background, navy (#1e3a8a) CTA button, slate body text, navy left-border note block
+- `LAUDBOT` wordmark in navy header
+- `docs/BRAND.md` added: canonical palette (navy, white, black + slate scale), typography, voice, logo rules
+
+---
+
 ## 2026-04-07 — chore: update overlay .example files for all three modes (PR #85, closes #84)
 
 - `buddy.md.example` rewritten — old stub replaced with fully commented template matching current real overlay structure (all sections: persona, tone, anti-patterns, reading the room, hard limits, goal)
