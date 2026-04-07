@@ -168,7 +168,7 @@ async def get_mode_overlay(
     """Return the current overlay text for a single mode.
 
     Args:
-        mode: Mode slug (e.g. ``"recruiter"``).
+        mode: Mode slug (e.g. ``"professional"``).
         db: Injected async DB session.
 
     Returns:
@@ -189,7 +189,7 @@ async def update_mode_overlay(
     Takes effect immediately for all subsequent chat requests. Persisted to DB.
 
     Args:
-        mode: Mode slug (e.g. ``"recruiter"``).
+        mode: Mode slug (e.g. ``"professional"``).
         body: New overlay text.
         db: Injected async DB session.
 
@@ -214,7 +214,7 @@ async def get_mode_prompts(
     """Return the current suggested prompts for a single mode.
 
     Args:
-        mode: Mode slug (e.g. ``"recruiter"``).
+        mode: Mode slug (e.g. ``"professional"``).
         db: Injected async DB session.
 
     Returns:
@@ -233,7 +233,7 @@ async def update_mode_prompts(
     """Replace the suggested prompts list for a single mode. Persisted to DB.
 
     Args:
-        mode: Mode slug (e.g. ``"recruiter"``).
+        mode: Mode slug (e.g. ``"professional"``).
         body: New prompts list (blank entries are stripped).
         db: Injected async DB session.
 

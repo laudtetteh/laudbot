@@ -21,13 +21,13 @@ type SaveState = "idle" | "saving" | "saved" | "error";
 type AuthState = "checking" | "unauthenticated" | "authenticated";
 type InviteState = "idle" | "generating" | "done" | "error";
 
-const ALL_MODES = ["recruiter", "coworker", "buddy"] as const;
+const ALL_MODES = ["professional", "peer", "buddy"] as const;
 type Mode = (typeof ALL_MODES)[number];
 
 const MODE_LABELS: Record<Mode, string> = {
-  recruiter: "Recruiter (professional, but friendly)",
-  coworker: "Co-worker (fellow engineer)",
-  buddy: "Buddy (constantly roasting laud)",
+  professional: "Professional",
+  peer: "Peer",
+  buddy: "Buddy",
 };
 
 // ---------------------------------------------------------------------------
@@ -326,7 +326,7 @@ function InviteSection({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="recruiter@company.com"
+                placeholder="visitor@company.com"
                 required
                 disabled={inviteState === "generating"}
                 className="w-full rounded-lg border border-zinc-300/60 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-600 dark:focus:border-zinc-500 sm:max-w-sm"
@@ -568,26 +568,26 @@ function OverlayEditorSection({
   onSessionExpired: () => void;
 }) {
   const [overlays, setOverlays] = useState<Record<Mode, string>>({
-    recruiter: "",
-    coworker: "",
+    professional: "",
+    peer: "",
     buddy: "",
   });
   const [overlaySaveStates, setOverlaySaveStates] = useState<Record<Mode, SaveState>>({
-    recruiter: "idle",
-    coworker: "idle",
+    professional: "idle",
+    peer: "idle",
     buddy: "idle",
   });
   const [prompts, setPrompts] = useState<Record<Mode, string>>({
-    recruiter: "",
-    coworker: "",
+    professional: "",
+    peer: "",
     buddy: "",
   });
   const [promptSaveStates, setPromptSaveStates] = useState<Record<Mode, SaveState>>({
-    recruiter: "idle",
-    coworker: "idle",
+    professional: "idle",
+    peer: "idle",
     buddy: "idle",
   });
-  const [activeTab, setActiveTab] = useState<Mode>("recruiter");
+  const [activeTab, setActiveTab] = useState<Mode>("professional");
   const [isUnlocked, setIsUnlocked] = useState(false);
 
   useEffect(() => {
@@ -651,8 +651,8 @@ function OverlayEditorSection({
 
   // Per-mode placeholder prompts so the textarea is self-documenting.
   const PROMPT_PLACEHOLDERS: Record<Mode, string> = {
-    recruiter: "What's Laud's engineering background?\nWhat kind of roles is he looking for?\nHas he worked with AI systems before?",
-    coworker: "Walk me through your system design approach.\nHow do you handle tech debt?\nWhat's your take on microservices vs monoliths?",
+    professional: "What's Laud's engineering background?\nWhat kind of roles is he looking for?\nHas he worked with AI systems before?",
+    peer: "Walk me through your system design approach.\nHow do you handle tech debt?\nWhat's your take on microservices vs monoliths?",
     buddy: "Roast Laud's career choices.\nWhat's his most embarrassing coding moment?\nBe honest — is he actually good?",
   };
 

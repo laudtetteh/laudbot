@@ -62,7 +62,7 @@ LaudBot gives recruiters a conversational interface to ask questions about me an
 | Admin UI — provider toggle | `GET/PUT /api/admin/llm-config`; runtime provider + model switch, no redeploy | ✅ |
 | Markdown rendering | `react-markdown` + `remark-gfm` in assistant chat bubbles | ✅ |
 | JWT auth — admin | `POST /api/auth/admin/login`; username + password → JWT (`role: admin`) | ✅ |
-| JWT auth — recruiter invite | `POST /api/admin/invitations` (admin-only) → invite URL; `POST /api/auth/accept-invite` → recruiter JWT with `recruiter_id` | ✅ |
+| JWT auth — visitor invite | `POST /api/admin/invitations` (admin-only) → invite URL; `POST /api/auth/accept-invite` → visitor JWT with `visitor_id` | ✅ |
 | Frontend auth gates | `/admin` login form; `/invite` token exchange; `/chat` Bearer attachment + redirect | ✅ |
 
 ---
@@ -71,9 +71,9 @@ LaudBot gives recruiters a conversational interface to ask questions about me an
 
 | Feature | Description | Status |
 |---------|-------------|--------|
-| Invite modes | 3 personas (`recruiter`, `coworker`, `buddy`) — mode embedded in JWT; per-invite `allowed_modes`, `default_mode`, `can_switch_modes` | ✅ |
+| Invite modes | 3 personas (`professional`, `peer`, `buddy`) — mode embedded in JWT; per-invite `allowed_modes`, `default_mode`, `can_switch_modes` | ✅ |
 | Admin invite UI | Generate invite links from admin panel with per-invite mode config | ✅ |
-| Transactional invite email | Resend delivers invite link to recruiter email; non-fatal if key missing | ✅ |
+| Transactional invite email | Resend delivers invite link to visitor email; non-fatal if key missing | ✅ |
 | DO App Platform deployment | CI/CD → GHCR image push → DO auto-deploy on merge to main | ✅ |
 | Exit / logout | Exit button in chat clears sessionStorage, redirects to `/` | ✅ |
 | Suggested prompts | Per-mode clickable chips in chat empty state, admin-configurable | ✅ |
@@ -104,7 +104,7 @@ LaudBot gives recruiters a conversational interface to ask questions about me an
 | Feature | Description | Notes |
 |---------|-------------|-------|
 | Next.js CVE patch | Upgrade `next` to latest — critical CVEs in `15.3.0` | Before public push |
-| Chat history persistence | Store messages keyed to `recruiter_id`; requires DB | `recruiter_id` already in JWT — no auth refactor |
+| Chat history persistence | Store messages keyed to `visitor_id`; requires DB | ✅ Done — `visitor_id` in JWT, messages persisted to `chat_messages` |
 | PostgreSQL + pgvector | Persistent invite store, chat history, source registry | Prerequisite for retrieval |
 | Source ingestion pipeline | Index approved files into vector store | Requires DB |
 | Retrieval-augmented generation | Semantic search over approved content at chat time | Requires ingestion |
@@ -130,7 +130,7 @@ Response: { "access_token": "string", "token_type": "bearer" }
 **`POST /api/auth/accept-invite`**
 ```json
 Request:  { "invite_token": "string" }
-Response: { "access_token": "string", "token_type": "bearer", "recruiter_id": "uuid" }
+Response: { "access_token": "string", "token_type": "bearer", "visitor_id": "uuid" }
 ```
 
 ### Admin (requires `Authorization: Bearer <admin_jwt>`)
@@ -152,7 +152,7 @@ Request:  { "provider": "string", "model": "string" }
 Response: { "provider": "string", "model": "string", "available_models": {...} }
 ```
 
-### Recruiter (requires `Authorization: Bearer <recruiter_jwt>`)
+### Visitor (requires `Authorization: Bearer <visitor_jwt>`)
 
 **`POST /api/chat`**
 ```json
@@ -181,7 +181,7 @@ Response: { "response": "string", "provider": "string", "model": "string" }
 
 - [ ] Which embedding model for the retrieval layer?
 - [ ] How are approved sources formally registered — a DB table, a YAML manifest, or directory convention?
-- [ ] Chat history: show recruiter their own history on return? Or session-only?
+- [ ] Chat history: show visitor their own history on return? Or session-only?
 
 ---
 

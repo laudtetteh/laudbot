@@ -57,7 +57,7 @@ async def get_chat_prompts(
     visitor: dict = Depends(get_current_visitor),
     db: AsyncSession = Depends(get_db),
 ) -> ModePromptsMap:
-    """Return suggested prompts for all modes the recruiter is allowed to use.
+    """Return suggested prompts for all modes the visitor is allowed to use.
 
     Args:
         visitor: Decoded visitor JWT payload.

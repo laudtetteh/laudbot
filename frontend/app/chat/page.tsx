@@ -18,14 +18,14 @@ interface HistoryMessage extends Message {
 }
 
 const MODE_LABELS: Record<string, string> = {
-  recruiter: "Recruiter",
-  coworker: "Co-worker",
+  professional: "Professional",
+  peer: "Peer",
   buddy: "Buddy",
 };
 
 const MODE_DESCRIPTIONS: Record<string, string> = {
-  recruiter: "Professional conversation about career, skills, and role fit",
-  coworker: "Technical deep-dive — architecture, decisions, and engineering craft",
+  professional: "Professional conversation about career, skills, and role fit",
+  peer: "Technical deep-dive — architecture, decisions, and engineering craft",
   buddy: "Casual and playful, with a healthy dose of friendly roasting",
 };
 
@@ -77,7 +77,7 @@ export default function ChatPage() {
 
     setToken(stored);
     setActiveMode(mode);
-    const CANONICAL_MODE_ORDER = ["recruiter", "coworker", "buddy"];
+    const CANONICAL_MODE_ORDER = ["professional", "peer", "buddy"];
     setAllowedModes(
       [...modes].sort(
         (a, b) =>
