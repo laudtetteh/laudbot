@@ -21,12 +21,12 @@ export default function Home() {
       />
 
       <div className="relative mx-auto w-full max-w-4xl">
-        <p className="animate-fade-in mb-5 text-xs font-medium uppercase tracking-widest text-zinc-500">
+        <p className="animate-fade-in mb-5 text-xs font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
           Private · Invite-only
         </p>
 
         <h1
-          className="animate-fade-in-up mb-6 text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl"
+          className="animate-fade-in-up mb-6 text-4xl font-semibold leading-tight tracking-tight text-zinc-900 dark:text-white sm:text-5xl lg:text-6xl"
           style={{ animationDelay: "60ms" }}
         >
           Ask me anything
@@ -35,7 +35,7 @@ export default function Home() {
         </h1>
 
         <p
-          className="animate-fade-in-up mb-10 max-w-lg text-base leading-relaxed text-zinc-400 sm:text-lg"
+          className="animate-fade-in-up mb-10 max-w-lg text-base leading-relaxed text-zinc-500 dark:text-zinc-400 sm:text-lg"
           style={{ animationDelay: "120ms" }}
         >
           LaudBot is a professional agent that answers questions about Laud&apos;s
@@ -49,11 +49,11 @@ export default function Home() {
         >
           <Link
             href="/chat"
-            className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-zinc-950 shadow-sm transition-all hover:bg-zinc-100 hover:shadow-md active:scale-95"
+            className="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-zinc-700 hover:shadow-md active:scale-95 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100"
           >
             Start a conversation →
           </Link>
-          <p className="text-xs text-zinc-600">
+          <p className="text-xs text-zinc-400 dark:text-zinc-600">
             You&apos;ll need an invite link to access the chat.
           </p>
         </div>

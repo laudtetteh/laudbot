@@ -8,6 +8,17 @@ body {
   height: 100%;
 }
 
+/* Theme-sensitive colour tokens used by custom CSS below */
+:root {
+  --typing-dot-color: theme("colors.zinc.400");
+  --scrollbar-color: theme("colors.zinc.300");
+}
+
+.dark {
+  --typing-dot-color: theme("colors.zinc.400");
+  --scrollbar-color: theme("colors.zinc.600");
+}
+
 /* Typing indicator dots */
 @keyframes typingDot {
   0%,
@@ -27,7 +38,7 @@ body {
   width: 7px;
   height: 7px;
   border-radius: 9999px;
-  background-color: theme("colors.zinc.500");
+  background-color: var(--typing-dot-color);
   animation: typingDot 1.2s ease-in-out infinite;
 }
 
@@ -42,7 +53,7 @@ body {
 /* Slim, subtle scrollbar in the message area */
 .messages-scroll {
   scrollbar-width: thin;
-  scrollbar-color: theme("colors.zinc.700") transparent;
+  scrollbar-color: var(--scrollbar-color) transparent;
 }
 
 .messages-scroll::-webkit-scrollbar {
@@ -54,6 +65,6 @@ body {
 }
 
 .messages-scroll::-webkit-scrollbar-thumb {
-  background-color: theme("colors.zinc.700");
+  background-color: var(--scrollbar-color);
   border-radius: 9999px;
 }

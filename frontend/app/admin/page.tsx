@@ -38,9 +38,9 @@ const MODE_LABELS: Record<Mode, string> = {
 function SectionHeader({ title, description }: { title: string; description?: string }) {
   return (
     <div className="mb-5">
-      <h2 className="text-sm font-semibold text-zinc-200">{title}</h2>
+      <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{title}</h2>
       {description && (
-        <p className="mt-1 text-xs leading-relaxed text-zinc-500">{description}</p>
+        <p className="mt-1 text-xs leading-relaxed text-zinc-500 dark:text-zinc-500">{description}</p>
       )}
     </div>
   );
@@ -49,7 +49,7 @@ function SectionHeader({ title, description }: { title: string; description?: st
 /** Consistent card wrapper */
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-zinc-800/70 bg-zinc-900/60 p-5 sm:p-6 ${className}`}>
+    <div className={`rounded-xl border border-zinc-200/70 bg-zinc-50/80 p-5 dark:border-zinc-700/70 dark:bg-zinc-800/60 sm:p-6 ${className}`}>
       {children}
     </div>
   );
@@ -95,15 +95,15 @@ function LoginForm({ onSuccess }: { onSuccess: (token: string) => void }) {
   return (
     <div className="flex flex-1 items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm animate-fade-in-up">
-        <h1 className="mb-1 text-xl font-semibold text-white">Admin login</h1>
-        <p className="mb-8 text-sm text-zinc-500">
+        <h1 className="mb-1 text-xl font-semibold text-zinc-900 dark:text-white">Admin login</h1>
+        <p className="mb-8 text-sm text-zinc-500 dark:text-zinc-500">
           Owner-only access. Enter your credentials to continue.
         </p>
 
         <Card>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+              <label className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Username
               </label>
               <input
@@ -112,12 +112,12 @@ function LoginForm({ onSuccess }: { onSuccess: (token: string) => void }) {
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
                 required
-                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-4 py-2.5 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500"
+                className="w-full rounded-lg border border-zinc-300/60 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-600 dark:focus:border-zinc-500"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+              <label className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Password
               </label>
               <input
@@ -126,12 +126,12 @@ function LoginForm({ onSuccess }: { onSuccess: (token: string) => void }) {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
-                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-4 py-2.5 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500"
+                className="w-full rounded-lg border border-zinc-300/60 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-600 dark:focus:border-zinc-500"
               />
             </div>
 
             {error && (
-              <p className="rounded-lg border border-red-900/60 bg-red-950/60 px-3 py-2 text-xs text-red-400">
+              <p className="rounded-lg border border-red-200/60 bg-red-50/60 px-3 py-2 text-xs text-red-600 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-400">
                 {error}
               </p>
             )}
@@ -139,7 +139,7 @@ function LoginForm({ onSuccess }: { onSuccess: (token: string) => void }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-zinc-100 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-all hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-white"
             >
               {loading ? "Signing in…" : "Sign in"}
             </button>
@@ -288,9 +288,9 @@ function InviteSection({
       <Card>
         {inviteState === "done" && result ? (
           <div className="animate-fade-in space-y-4">
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
               Invite link generated for{" "}
-              <span className="font-medium text-zinc-200">{result.email}</span>
+              <span className="font-medium text-zinc-700 dark:text-zinc-200">{result.email}</span>
             </p>
 
             <div className="flex items-stretch gap-2">
@@ -298,11 +298,11 @@ function InviteSection({
                 type="text"
                 readOnly
                 value={result.invite_url}
-                className="flex-1 rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2 text-xs text-zinc-300 outline-none"
+                className="flex-1 rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-2 text-xs text-zinc-600 outline-none dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-zinc-300"
               />
               <button
                 onClick={handleCopy}
-                className="rounded-lg bg-zinc-700 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-zinc-600"
+                className="rounded-lg bg-zinc-900 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-700 dark:hover:bg-zinc-600"
               >
                 {copied ? "Copied ✓" : "Copy"}
               </button>
@@ -310,7 +310,7 @@ function InviteSection({
 
             <button
               onClick={handleReset}
-              className="text-xs text-zinc-500 transition-colors hover:text-zinc-300"
+              className="text-xs text-zinc-400 transition-colors hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300"
             >
               ← Generate another
             </button>
@@ -319,7 +319,7 @@ function InviteSection({
           <form onSubmit={handleGenerate} className="space-y-5">
             {/* Email */}
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+              <label className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Email
               </label>
               <input
@@ -329,15 +329,15 @@ function InviteSection({
                 placeholder="recruiter@company.com"
                 required
                 disabled={inviteState === "generating"}
-                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2.5 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 sm:max-w-sm"
+                className="w-full rounded-lg border border-zinc-300/60 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-600 dark:focus:border-zinc-500 sm:max-w-sm"
               />
             </div>
 
             {/* Note */}
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+              <label className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Note{" "}
-                <span className="font-normal text-zinc-600">(optional)</span>
+                <span className="font-normal text-zinc-400 dark:text-zinc-500">(optional)</span>
               </label>
               <input
                 type="text"
@@ -345,13 +345,13 @@ function InviteSection({
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="e.g. Acme Corp — senior eng role"
                 disabled={inviteState === "generating"}
-                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2.5 text-sm text-white placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50 sm:max-w-sm"
+                className="w-full rounded-lg border border-zinc-300/60 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-600 dark:focus:border-zinc-500 sm:max-w-sm"
               />
             </div>
 
             {/* Allowed modes */}
             <div>
-              <label className="mb-2 block text-xs font-medium text-zinc-400">
+              <label className="mb-2 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Allowed modes
               </label>
               <div className="flex flex-wrap gap-2">
@@ -366,12 +366,12 @@ function InviteSection({
                       key={mode}
                       className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-all ${
                         !isEnabled
-                          ? "cursor-not-allowed border-zinc-800/60 text-zinc-600"
+                          ? "cursor-not-allowed border-zinc-200/60 text-zinc-400 dark:border-zinc-700/60 dark:text-zinc-500"
                           : isLocked
-                          ? "cursor-default border-zinc-500 bg-zinc-800 text-zinc-200 shadow-sm"
+                          ? "cursor-default border-zinc-400 bg-zinc-100 text-zinc-700 shadow-sm dark:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-200"
                           : isChecked
-                          ? "cursor-pointer border-zinc-500 bg-zinc-800 text-zinc-200 shadow-sm"
-                          : "cursor-pointer border-zinc-700/60 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
+                          ? "cursor-pointer border-zinc-400 bg-zinc-100 text-zinc-700 shadow-sm dark:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-200"
+                          : "cursor-pointer border-zinc-200/60 text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-700/60 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
                       }`}
                     >
                       <input
@@ -383,7 +383,7 @@ function InviteSection({
                       />
                       {MODE_LABELS[mode]}
                       {!isEnabled && (
-                        <span className="text-zinc-700">(disabled)</span>
+                        <span className="text-zinc-400 dark:text-zinc-600">(disabled)</span>
                       )}
                     </label>
                   );
@@ -393,7 +393,7 @@ function InviteSection({
 
             {/* Default mode */}
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-zinc-400">
+              <label className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Default mode
               </label>
               <select
@@ -401,7 +401,7 @@ function InviteSection({
                 onChange={(e) => setDefaultMode(e.target.value as Mode)}
                 required
                 disabled={allowedModes.length === 0 || allowedModes.length === 1 || inviteState === "generating"}
-                className="rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-zinc-300/60 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:focus:border-zinc-500"
               >
                 <option value="" disabled>
                   Select default…
@@ -419,7 +419,7 @@ function InviteSection({
               <div
                 onClick={() => allowedModes.length > 1 && setCanSwitch((v) => !v)}
                 className={`relative h-5 w-9 rounded-full transition-colors ${
-                  canSwitch && allowedModes.length > 1 ? "bg-zinc-400" : "bg-zinc-700"
+                  canSwitch && allowedModes.length > 1 ? "bg-zinc-600 dark:bg-zinc-400" : "bg-zinc-200 dark:bg-zinc-700"
                 }`}
               >
                 <span
@@ -428,9 +428,9 @@ function InviteSection({
                   }`}
                 />
               </div>
-              <span className="text-xs text-zinc-400">
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
                 Allow recipient to switch modes
-                <span className="ml-1 text-zinc-600">
+                <span className="ml-1 text-zinc-400 dark:text-zinc-500">
                   (starts a new conversation each time)
                 </span>
               </span>
@@ -440,13 +440,13 @@ function InviteSection({
               <button
                 type="submit"
                 disabled={inviteState === "generating"}
-                className="rounded-lg bg-zinc-700 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-700 dark:hover:bg-zinc-600"
               >
                 {inviteState === "generating" ? "Generating…" : "Generate invite"}
               </button>
 
               {inviteState === "error" && errorMessage && (
-                <span className="text-xs text-red-400">{errorMessage}</span>
+                <span className="text-xs text-red-600 dark:text-red-400">{errorMessage}</span>
               )}
             </div>
           </form>
@@ -517,15 +517,15 @@ function GlobalModesSection({
 
       <Card>
         {modesConfig ? (
-          <div className="divide-y divide-zinc-800/60">
+          <div className="divide-y divide-zinc-200/60 dark:divide-zinc-700/60">
             {ALL_MODES.map((mode) => (
               <div key={mode} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-                <span className="text-sm text-zinc-300">{MODE_LABELS[mode]}</span>
+                <span className="text-sm text-zinc-700 dark:text-zinc-300">{MODE_LABELS[mode]}</span>
                 <label className="flex cursor-pointer items-center gap-2.5">
                   <div
                     onClick={() => toggleMode(mode)}
                     className={`relative h-5 w-9 rounded-full transition-colors ${
-                      modesConfig[mode] ? "bg-zinc-400" : "bg-zinc-700"
+                      modesConfig[mode] ? "bg-zinc-600 dark:bg-zinc-400" : "bg-zinc-200 dark:bg-zinc-700"
                     }`}
                   >
                     <span
@@ -534,7 +534,7 @@ function GlobalModesSection({
                       }`}
                     />
                   </div>
-                  <span className="w-6 text-xs text-zinc-500">
+                  <span className="w-6 text-xs text-zinc-400 dark:text-zinc-500">
                     {modesConfig[mode] ? "On" : "Off"}
                   </span>
                 </label>
@@ -542,11 +542,11 @@ function GlobalModesSection({
             ))}
 
             {saveState === "error" && errorMessage && (
-              <p className="pt-3 text-xs text-red-400">{errorMessage}</p>
+              <p className="pt-3 text-xs text-red-600 dark:text-red-400">{errorMessage}</p>
             )}
           </div>
         ) : (
-          <p className="text-xs text-zinc-600">Loading…</p>
+          <p className="text-xs text-zinc-400 dark:text-zinc-500">Loading…</p>
         )}
       </Card>
     </section>
@@ -660,14 +660,14 @@ function OverlayEditorSection({
     <section className="mb-8">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-sm font-semibold text-zinc-200">Mode overlays &amp; prompts</h2>
-          <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+          <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Mode overlays &amp; prompts</h2>
+          <p className="mt-1 text-xs leading-relaxed text-zinc-500 dark:text-zinc-500">
             Configure the system prompt overlay and suggested prompts for each mode.
           </p>
         </div>
         <button
           onClick={() => setIsUnlocked((v) => !v)}
-          className="mt-0.5 shrink-0 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-zinc-500 hover:text-zinc-200"
+          className="mt-0.5 shrink-0 rounded-lg border border-zinc-200 px-3 py-1.5 text-xs text-zinc-500 transition-colors hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
         >
           {isUnlocked ? "Lock" : "Edit"}
         </button>
@@ -680,12 +680,12 @@ function OverlayEditorSection({
             {ALL_MODES.map((mode) => (
               <span
                 key={mode}
-                className="rounded-md bg-zinc-800 px-2.5 py-1 text-xs text-zinc-400"
+                className="rounded-md bg-zinc-100 px-2.5 py-1 text-xs text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
               >
                 {MODE_LABELS[mode].split(" (")[0]}
               </span>
             ))}
-            <span className="ml-auto text-xs text-zinc-600">{ALL_MODES.length} modes</span>
+            <span className="ml-auto text-xs text-zinc-400 dark:text-zinc-500">{ALL_MODES.length} modes</span>
           </div>
         </Card>
       )}
@@ -694,15 +694,15 @@ function OverlayEditorSection({
       {isUnlocked && (
         <Card className="p-0 overflow-hidden">
           {/* Mode tabs */}
-          <div className="flex overflow-x-auto border-b border-zinc-800/70">
+          <div className="flex overflow-x-auto border-b border-zinc-200/70 dark:border-zinc-700/70">
             {ALL_MODES.map((mode) => (
               <button
                 key={mode}
                 onClick={() => setActiveTab(mode)}
                 className={`whitespace-nowrap px-4 py-3 text-xs font-medium transition-colors ${
                   activeTab === mode
-                    ? "border-b-2 border-zinc-300 text-zinc-200"
-                    : "text-zinc-500 hover:text-zinc-300"
+                    ? "border-b-2 border-zinc-700 text-zinc-800 dark:border-zinc-300 dark:text-zinc-200"
+                    : "text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300"
                 }`}
               >
                 {MODE_LABELS[mode]}
@@ -713,10 +713,10 @@ function OverlayEditorSection({
           <div className="space-y-6 p-5 sm:p-6">
             {/* Overlay editor */}
             <div>
-              <label className="mb-1 block text-xs font-medium text-zinc-400">
+              <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 System prompt overlay
               </label>
-              <p className="mb-2 text-xs text-zinc-600">
+              <p className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
                 Appended to the base system prompt when this mode is active. Leave blank to use only the base.
               </p>
               <textarea
@@ -726,31 +726,31 @@ function OverlayEditorSection({
                 }
                 placeholder={`Overlay instructions for ${MODE_LABELS[activeTab]} mode…`}
                 rows={7}
-                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2.5 font-mono text-sm text-zinc-200 placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500"
+                className="w-full rounded-lg border border-zinc-300/60 bg-white px-3 py-2.5 font-mono text-sm text-zinc-800 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-600 dark:focus:border-zinc-500"
               />
               <div className="mt-2 flex items-center gap-3">
                 <button
                   onClick={() => handleSaveOverlay(activeTab)}
                   disabled={overlaySaveStates[activeTab] === "saving"}
-                  className="rounded-lg bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg bg-zinc-900 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-700 dark:hover:bg-zinc-600"
                 >
                   {overlaySaveStates[activeTab] === "saving" ? "Saving…" : "Save overlay"}
                 </button>
                 {overlaySaveStates[activeTab] === "saved" && (
-                  <span className="text-xs text-emerald-400">✓ Saved</span>
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400">✓ Saved</span>
                 )}
                 {overlaySaveStates[activeTab] === "error" && (
-                  <span className="text-xs text-red-400">Save failed</span>
+                  <span className="text-xs text-red-600 dark:text-red-400">Save failed</span>
                 )}
               </div>
             </div>
 
             {/* Suggested prompts editor */}
             <div>
-              <label className="mb-1 block text-xs font-medium text-zinc-400">
+              <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Suggested prompts
               </label>
-              <p className="mb-2 text-xs text-zinc-600">
+              <p className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
                 One prompt per line. Shown as clickable chips in the chat empty state for this mode.
               </p>
               <textarea
@@ -760,21 +760,21 @@ function OverlayEditorSection({
                 }
                 placeholder={PROMPT_PLACEHOLDERS[activeTab]}
                 rows={4}
-                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2.5 text-sm text-zinc-200 placeholder-zinc-600 outline-none transition-colors focus:border-zinc-500"
+                className="w-full rounded-lg border border-zinc-300/60 bg-white px-3 py-2.5 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-600 dark:focus:border-zinc-500"
               />
               <div className="mt-2 flex items-center gap-3">
                 <button
                   onClick={() => handleSavePrompts(activeTab)}
                   disabled={promptSaveStates[activeTab] === "saving"}
-                  className="rounded-lg bg-zinc-700 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg bg-zinc-900 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-700 dark:hover:bg-zinc-600"
                 >
                   {promptSaveStates[activeTab] === "saving" ? "Saving…" : "Save prompts"}
                 </button>
                 {promptSaveStates[activeTab] === "saved" && (
-                  <span className="text-xs text-emerald-400">✓ Saved</span>
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400">✓ Saved</span>
                 )}
                 {promptSaveStates[activeTab] === "error" && (
-                  <span className="text-xs text-red-400">Save failed</span>
+                  <span className="text-xs text-red-600 dark:text-red-400">Save failed</span>
                 )}
               </div>
             </div>
@@ -870,7 +870,7 @@ function LLMProviderSection({
       />
 
       {loadError && (
-        <div className="mb-4 rounded-xl border border-red-900/60 bg-red-950/60 px-4 py-3 text-sm text-red-400">
+        <div className="mb-4 rounded-xl border border-red-200/60 bg-red-50/60 px-4 py-3 text-sm text-red-600 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-400">
           {loadError}
         </div>
       )}
@@ -879,7 +879,7 @@ function LLMProviderSection({
         <Card>
           <div className="space-y-5">
             <div>
-              <label className="mb-2 block text-xs font-medium text-zinc-400">
+              <label className="mb-2 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Provider
               </label>
               <div className="flex flex-wrap gap-2">
@@ -889,8 +889,8 @@ function LLMProviderSection({
                     onClick={() => handleProviderChange(provider)}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
                       selectedProvider === provider
-                        ? "bg-zinc-100 text-zinc-900 shadow-sm"
-                        : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200"
+                        ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
+                        : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
                     }`}
                   >
                     {provider === "claude" ? "Claude (Anthropic)" : "OpenAI"}
@@ -900,7 +900,7 @@ function LLMProviderSection({
             </div>
 
             <div>
-              <label className="mb-2 block text-xs font-medium text-zinc-400">
+              <label className="mb-2 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Model
               </label>
               <select
@@ -909,7 +909,7 @@ function LLMProviderSection({
                   setSelectedModel(e.target.value);
                   setSaveState("idle");
                 }}
-                className="rounded-lg border border-zinc-700/60 bg-zinc-800 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-zinc-500"
+                className="rounded-lg border border-zinc-300/60 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:focus:border-zinc-500"
               >
                 {availableModels.map((model) => (
                   <option key={model} value={model}>
@@ -919,22 +919,22 @@ function LLMProviderSection({
               </select>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-800/60 pt-4">
+            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-200/60 pt-4 dark:border-zinc-700/60">
               <button
                 onClick={handleSave}
                 disabled={saveState === "saving" || !isDirty}
-                className="rounded-lg bg-zinc-700 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-700 dark:hover:bg-zinc-600"
               >
                 {saveState === "saving" ? "Saving…" : "Save"}
               </button>
 
               {saveState === "saved" && (
-                <span className="text-xs text-emerald-400">
+                <span className="text-xs text-emerald-600 dark:text-emerald-400">
                   ✓ Active — next chat will use {selectedProvider} / {selectedModel}
                 </span>
               )}
               {saveState === "error" && errorMessage && (
-                <span className="text-xs text-red-400">{errorMessage}</span>
+                <span className="text-xs text-red-600 dark:text-red-400">{errorMessage}</span>
               )}
             </div>
           </div>
@@ -1036,8 +1036,8 @@ function SystemPromptSection({
     <section className="mb-8">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-sm font-semibold text-zinc-200">System Prompt</h2>
-          <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+          <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">System Prompt</h2>
+          <p className="mt-1 text-xs leading-relaxed text-zinc-500 dark:text-zinc-500">
             The base prompt sent to the LLM on every chat request. Saving here takes effect
             immediately — no environment variable update needed.
           </p>
@@ -1045,7 +1045,7 @@ function SystemPromptSection({
         {data && (
           <button
             onClick={() => setIsUnlocked((v) => !v)}
-            className="mt-0.5 shrink-0 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-zinc-500 hover:text-zinc-200"
+            className="mt-0.5 shrink-0 rounded-lg border border-zinc-200 px-3 py-1.5 text-xs text-zinc-500 transition-colors hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
           >
             {isUnlocked ? "Lock" : "Edit"}
           </button>
@@ -1053,7 +1053,7 @@ function SystemPromptSection({
       </div>
 
       {loadError && (
-        <div className="mb-4 rounded-xl border border-red-900/60 bg-red-950/60 px-4 py-3 text-sm text-red-400">
+        <div className="mb-4 rounded-xl border border-red-200/60 bg-red-50/60 px-4 py-3 text-sm text-red-600 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-400">
           {loadError}
         </div>
       )}
@@ -1065,15 +1065,15 @@ function SystemPromptSection({
             <span
               className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
                 data.source === "database"
-                  ? "bg-emerald-950/60 text-emerald-400"
-                  : "bg-amber-950/60 text-amber-400"
+                  ? "bg-emerald-100/60 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
+                  : "bg-amber-100/60 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
               }`}
             >
               {data.source === "database" ? "● Database" : "⚠ " + data.source.replace("_", " ")}
             </span>
-            <span className="text-xs text-zinc-500">{content.length.toLocaleString()} chars</span>
+            <span className="text-xs text-zinc-400 dark:text-zinc-500">{content.length.toLocaleString()} chars</span>
             {data.updated_at && (
-              <span className="text-xs text-zinc-600">
+              <span className="text-xs text-zinc-400 dark:text-zinc-500">
                 Last saved {new Date(data.updated_at).toLocaleString()}
               </span>
             )}
@@ -1090,19 +1090,19 @@ function SystemPromptSection({
               <span
                 className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
                   data.source === "database"
-                    ? "bg-emerald-950/60 text-emerald-400"
-                    : "bg-amber-950/60 text-amber-400"
+                    ? "bg-emerald-100/60 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
+                    : "bg-amber-100/60 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
                 }`}
               >
                 {data.source === "database" ? "● Database" : "⚠ " + data.source.replace("_", " ")}
               </span>
               {data.source !== "database" && (
-                <span className="text-xs text-zinc-500">
+                <span className="text-xs text-zinc-400 dark:text-zinc-500">
                   {SOURCE_LABELS[data.source]}
                 </span>
               )}
               {data.updated_at && (
-                <span className="ml-auto text-xs text-zinc-600">
+                <span className="ml-auto text-xs text-zinc-400 dark:text-zinc-500">
                   Last saved {new Date(data.updated_at).toLocaleString()}
                 </span>
               )}
@@ -1117,26 +1117,26 @@ function SystemPromptSection({
               }}
               rows={20}
               spellCheck={false}
-              className="w-full resize-y rounded-lg border border-zinc-700/60 bg-zinc-800 px-4 py-3 font-mono text-xs leading-relaxed text-zinc-200 outline-none transition-colors focus:border-zinc-500"
+              className="w-full resize-y rounded-lg border border-zinc-300/60 bg-white px-4 py-3 font-mono text-xs leading-relaxed text-zinc-800 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-zinc-200 dark:focus:border-zinc-500"
             />
 
-            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-800/60 pt-4">
-              <span className="text-xs text-zinc-600">
+            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-200/60 pt-4 dark:border-zinc-700/60">
+              <span className="text-xs text-zinc-400 dark:text-zinc-500">
                 {content.length.toLocaleString()} chars
               </span>
               <div className="ml-auto flex items-center gap-4">
                 {saveState === "saved" && (
-                  <span className="text-xs text-emerald-400">
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400">
                     ✓ Saved — takes effect on next chat request
                   </span>
                 )}
                 {saveState === "error" && errorMessage && (
-                  <span className="text-xs text-red-400">{errorMessage}</span>
+                  <span className="text-xs text-red-600 dark:text-red-400">{errorMessage}</span>
                 )}
                 <button
                   onClick={handleSave}
                   disabled={saveState === "saving" || !isDirty || !content.trim()}
-                  className="rounded-lg bg-zinc-700 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-700 dark:hover:bg-zinc-600"
                 >
                   {saveState === "saving" ? "Saving…" : "Save prompt"}
                 </button>
@@ -1172,14 +1172,14 @@ function AdminControls({ token, onLogout }: { token: string; onLogout: () => voi
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-white">Admin</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">Admin</h1>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
             Owner-only controls for managing LaudBot&apos;s behaviour.
           </p>
         </div>
         <button
           onClick={onLogout}
-          className="mt-1 rounded-lg border border-zinc-800 px-3 py-1.5 text-xs text-zinc-500 transition-colors hover:border-zinc-600 hover:text-zinc-300"
+          className="mt-1 rounded-lg border border-zinc-200 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-800 dark:text-zinc-500 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
         >
           Sign out
         </button>
@@ -1208,8 +1208,8 @@ function AdminControls({ token, onLogout }: { token: string; onLogout: () => voi
             },
           ].map(({ title, description }) => (
             <Card key={title}>
-              <h3 className="mb-1.5 text-sm font-medium text-zinc-500">{title}</h3>
-              <p className="text-xs leading-relaxed text-zinc-600">{description}</p>
+              <h3 className="mb-1.5 text-sm font-medium text-zinc-400 dark:text-zinc-500">{title}</h3>
+              <p className="text-xs leading-relaxed text-zinc-400 dark:text-zinc-500">{description}</p>
             </Card>
           ))}
         </div>
