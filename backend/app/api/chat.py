@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
@@ -207,6 +207,9 @@ async def chat(
     # --- Persist both turns to the DB ---
     recruiter_id = uuid.UUID(recruiter["sub"])
     now = datetime.now(timezone.utc)
+    # Assistant is saved 1 ms after the user message so ordering by created_at
+    # is always deterministic even within the same request.
+    asst_now = now + timedelta(milliseconds=1)
 
     # Persist the last user message (the one that triggered this response).
     last_user_message = next(
@@ -233,7 +236,7 @@ async def chat(
             content=response_text,
             provider=config.provider,
             model=service.model,
-            created_at=now,
+            created_at=asst_now,
         )
     )
     await db.commit()

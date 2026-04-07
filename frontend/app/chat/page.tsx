@@ -66,14 +66,14 @@ export default function ChatPage() {
 
   // Resolve recruiter token, mode config, and persisted history on mount.
   useEffect(() => {
-    const stored = sessionStorage.getItem("recruiter_token");
+    const stored = localStorage.getItem("recruiter_token");
     if (!stored) {
       router.replace("/invite-required");
       return;
     }
-    const mode = sessionStorage.getItem("active_mode") ?? "";
-    const modes = JSON.parse(sessionStorage.getItem("allowed_modes") ?? "[]");
-    const canSwitch = sessionStorage.getItem("can_switch_modes") === "true";
+    const mode = localStorage.getItem("active_mode") ?? "";
+    const modes = JSON.parse(localStorage.getItem("allowed_modes") ?? "[]");
+    const canSwitch = localStorage.getItem("can_switch_modes") === "true";
 
     setToken(stored);
     setActiveMode(mode);
@@ -145,7 +145,7 @@ export default function ChatPage() {
 
   function applyModeSwitch(mode: string) {
     setActiveMode(mode);
-    sessionStorage.setItem("active_mode", mode);
+    localStorage.setItem("active_mode", mode);
     // Restore persisted history for the new mode rather than clearing to empty.
     setMessages(allHistory.filter((m) => m.mode === mode));
     setError(null);
@@ -162,7 +162,9 @@ export default function ChatPage() {
   }
 
   function handleLogout() {
-    sessionStorage.clear();
+    ["recruiter_token", "recruiter_id", "active_mode", "allowed_modes", "can_switch_modes"].forEach(
+      (k) => localStorage.removeItem(k),
+    );
     router.replace("/");
   }
 
@@ -192,7 +194,9 @@ export default function ChatPage() {
       });
 
       if (res.status === 401) {
-        sessionStorage.clear();
+        ["recruiter_token", "recruiter_id", "active_mode", "allowed_modes", "can_switch_modes"].forEach(
+          (k) => localStorage.removeItem(k),
+        );
         router.replace("/invite-required");
         return;
       }
@@ -436,7 +440,7 @@ export default function ChatPage() {
                         onClick={() => toggleExpanded(i)}
                         className="mt-2 text-xs text-zinc-400 transition-colors hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300"
                       >
-                        {isExpanded ? "Show less ↑" : "Read more ↓"}
+                        {isExpanded ? "Show less ↑" : "TL;DR ↓"}
                       </button>
                     )}
                   </div>
