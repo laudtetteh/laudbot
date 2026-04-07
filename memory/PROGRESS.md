@@ -5,6 +5,20 @@
 
 ---
 
+## 2026-04-06 — refactor: rename mode slugs — recruiter → professional, coworker → peer (PR #76, closes #77)
+
+- `MODES` list in `base.py`: `["professional", "peer", "buddy"]`
+- Email label map, all docstring slug references updated backend-wide
+- `chat/page.tsx`: `MODE_LABELS`, `MODE_DESCRIPTIONS`, `CANONICAL_MODE_ORDER`
+- `admin/page.tsx`: `ALL_MODES`, `MODE_LABELS`, all state keys, `PROMPT_PLACEHOLDERS`, default tab
+- Alembic migration 004: `UPDATE mode_configs`, `chat_messages`, `invitations` (including `array_replace` on `allowed_modes` array) — auto-runs at startup
+- Overlay files renamed: `professional.md`, `peer.md`; old `recruiter.md`, `coworker.md` + `.example` files deleted
+- `docs/ARCHITECTURE.md`, `docs/PRD.md`, `README.md` updated — historical decision log entries left intact
+- Dark mode palette tweak also shipped in PR #71 — lighter surfaces, borders, secondary text
+- PR #76 merged — branch: refactor/mode-naming
+
+---
+
 ## 2026-04-06 — refactor: rename recruiter → visitor throughout; absorb session + ordering fixes (PR #75)
 
 - JWT role `"recruiter"` → `"visitor"` in `create_token` and `get_current_visitor` dependency
