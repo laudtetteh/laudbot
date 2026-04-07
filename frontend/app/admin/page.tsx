@@ -326,7 +326,7 @@ function InviteSection({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="recruiter@company.com"
+                placeholder="visitor@company.com"
                 required
                 disabled={inviteState === "generating"}
                 className="w-full rounded-lg border border-zinc-300/60 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-600 dark:focus:border-zinc-500 sm:max-w-sm"

@@ -1,7 +1,7 @@
 """SQLAlchemy ORM models.
 
 Four tables:
-- ``invitations``   — invite tokens and recruiter config (replaces app.state.invite_tokens)
+- ``invitations``   — invite tokens and visitor config (replaces app.state.invite_tokens)
 - ``mode_config``   — per-mode enabled flag, overlay, and prompts (replaces app.state.modes_*)
 - ``chat_messages`` — persisted chat history keyed to visitor_id
 - ``system_config`` — key/value store for admin-editable runtime config (e.g. system prompt)
