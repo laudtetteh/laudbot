@@ -26,7 +26,7 @@ from app.api.health import router as health_router
 from app.db.base import AsyncSessionLocal
 from app.db.models import ModeConfig, SystemConfig
 from app.services.llm.base import DEFAULT_MODELS, MODES, LLMConfig
-from app.services.prompt import load_mode_overlay
+from app.services.prompt import load_mode_overlay, load_mode_prompts
 from sqlalchemy import select
 
 
@@ -64,7 +64,7 @@ async def _seed_mode_config() -> None:
                     mode=mode,
                     enabled=True,
                     overlay=load_mode_overlay(mode),
-                    prompts=[],
+                    prompts=load_mode_prompts(mode),
                 )
                 .on_conflict_do_nothing(index_elements=["mode"])
             )
