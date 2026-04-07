@@ -22,6 +22,8 @@ from app.models.auth import (
     AdminLoginResponse,
     CreateInvitationRequest,
     CreateInvitationResponse,
+    InvitationListResponse,
+    InvitationRecord,
 )
 from app.services.email import send_invite_email
 from app.services.llm.base import MODES
@@ -148,6 +150,138 @@ async def create_invitation(
     )
 
 
+@admin_router.get(
+    "/invitations",
+    response_model=InvitationListResponse,
+    dependencies=[Depends(get_current_admin)],
+)
+async def list_invitations(
+    db: AsyncSession = Depends(get_db),
+) -> InvitationListResponse:
+    """Return all invitations ordered newest first.
+
+    Args:
+        db: Injected async DB session.
+
+    Returns:
+        All invitation rows with status fields.
+    """
+    from sqlalchemy import desc
+
+    result = await db.execute(
+        select(Invitation).order_by(desc(Invitation.created_at))
+    )
+    rows = result.scalars().all()
+
+    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3001")
+
+    return InvitationListResponse(
+        invitations=[
+            InvitationRecord(
+                id=str(row.id),
+                email=row.email,
+                note=row.note,
+                invite_url=f"{frontend_url}/invite?token={row.invite_token}",
+                allowed_modes=row.allowed_modes,
+                default_mode=row.default_mode,
+                can_switch_modes=row.can_switch_modes,
+                created_at=row.created_at,
+                accepted_at=row.accepted_at,
+                revoked_at=row.revoked_at,
+                visitor_id=str(row.visitor_id) if row.visitor_id else None,
+            )
+            for row in rows
+        ]
+    )
+
+
+@admin_router.post(
+    "/invitations/{invite_id}/resend",
+    status_code=204,
+    dependencies=[Depends(get_current_admin)],
+)
+async def resend_invitation(
+    invite_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Re-send the original invite email for an existing invitation.
+
+    Uses the existing token — the visitor receives the same link.
+    Blocked if the invitation has been revoked.
+
+    Args:
+        invite_id: UUID of the invitation row.
+        db: Injected async DB session.
+
+    Raises:
+        HTTPException 404: If the invitation does not exist.
+        HTTPException 409: If the invitation has been revoked.
+    """
+    try:
+        row_id = uuid.UUID(invite_id)
+    except (ValueError, AttributeError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found")
+
+    result = await db.execute(select(Invitation).where(Invitation.id == row_id))
+    invitation: Invitation | None = result.scalar_one_or_none()
+
+    if invitation is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found")
+
+    if invitation.revoked_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot resend a revoked invitation",
+        )
+
+    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3001")
+    invite_url = f"{frontend_url}/invite?token={invitation.invite_token}"
+
+    await send_invite_email(
+        to_email=invitation.email,
+        invite_url=invite_url,
+        mode=invitation.default_mode,
+        note=invitation.note,
+    )
+
+
+@admin_router.delete(
+    "/invitations/{invite_id}",
+    status_code=204,
+    dependencies=[Depends(get_current_admin)],
+)
+async def revoke_invitation(
+    invite_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Soft-revoke an invitation by setting revoked_at.
+
+    The row is retained for history. Revoked tokens are rejected at
+    accept-invite time. Already-revoked invitations are silently idempotent.
+
+    Args:
+        invite_id: UUID of the invitation row.
+        db: Injected async DB session.
+
+    Raises:
+        HTTPException 404: If the invitation does not exist.
+    """
+    try:
+        row_id = uuid.UUID(invite_id)
+    except (ValueError, AttributeError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found")
+
+    result = await db.execute(select(Invitation).where(Invitation.id == row_id))
+    invitation: Invitation | None = result.scalar_one_or_none()
+
+    if invitation is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found")
+
+    if invitation.revoked_at is None:
+        invitation.revoked_at = datetime.now(timezone.utc)
+        await db.commit()
+
+
 # ---------------------------------------------------------------------------
 # Accept invite
 # ---------------------------------------------------------------------------
@@ -191,6 +325,12 @@ async def accept_invite(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired invite token",
+        )
+
+    if invitation.revoked_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="This invite has been revoked",
         )
 
     # Use existing visitor_id if this token was already accepted.
