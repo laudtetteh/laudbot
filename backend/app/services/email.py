@@ -28,15 +28,16 @@ def _build_html(to_email: str, invite_url: str, mode: str, note: str | None) -> 
     """
     mode_label = _MODE_LABELS.get(mode, mode.capitalize())
     note_block = (
-        f'<p style="color:#a1a1aa;font-size:14px;margin:0 0 24px;">📝 {note}</p>'
+        f'<p style="color:#475569;font-size:14px;margin:0 0 24px;padding:12px 16px;'
+        f'background:#f1f5f9;border-radius:6px;border-left:3px solid #1e3a8a;">{note}</p>'
         if note
         else ""
     )
 
     return f"""<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8" /></head>
-<body style="background:#09090b;margin:0;padding:48px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+<body style="background:#f8fafc;margin:0;padding:48px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0">
     <tr>
       <td align="center">
@@ -44,51 +45,52 @@ def _build_html(to_email: str, invite_url: str, mode: str, note: str | None) -> 
 
           <!-- Header -->
           <tr>
-            <td style="padding-bottom:32px;">
-              <p style="color:#a1a1aa;font-size:13px;margin:0;">LaudBot</p>
+            <td style="padding-bottom:24px;">
+              <p style="color:#1e3a8a;font-size:14px;font-weight:600;margin:0;letter-spacing:0.05em;">LAUDBOT</p>
             </td>
           </tr>
 
-          <!-- Body -->
+          <!-- Card -->
           <tr>
-            <td style="background:#18181b;border-radius:12px;padding:40px;">
-              <h1 style="color:#ffffff;font-size:20px;font-weight:600;margin:0 0 8px;">
+            <td style="background:#ffffff;border-radius:12px;padding:40px;border:1px solid #e2e8f0;">
+
+              <h1 style="color:#0f172a;font-size:22px;font-weight:600;margin:0 0 8px;line-height:1.3;">
                 You&apos;ve been invited to chat with Laud&apos;s AI agent
               </h1>
-              <p style="color:#a1a1aa;font-size:14px;margin:0 0 24px;">
-                Laud Tetteh — Senior Software Engineer
+              <p style="color:#475569;font-size:15px;margin:0 0 32px;">
+                Laud Tetteh &mdash; Senior Software Engineer
               </p>
 
               {note_block}
 
-              <p style="color:#71717a;font-size:13px;margin:0 0 6px;">Mode</p>
-              <p style="color:#e4e4e7;font-size:14px;font-weight:500;margin:0 0 32px;">{mode_label}</p>
+              <p style="color:#94a3b8;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 6px;">Mode</p>
+              <p style="color:#0f172a;font-size:15px;font-weight:500;margin:0 0 32px;">{mode_label}</p>
 
               <!-- CTA button -->
               <table cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="background:#3f3f46;border-radius:8px;">
+                  <td style="background:#1e3a8a;border-radius:8px;">
                     <a href="{invite_url}"
-                       style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;border-radius:8px;">
-                      Open chat →
+                       style="display:inline-block;padding:13px 32px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:8px;letter-spacing:0.01em;">
+                      Open chat &rarr;
                     </a>
                   </td>
                 </tr>
               </table>
 
-              <p style="color:#52525b;font-size:12px;margin:32px 0 0;">
-                This link is single-use and expires after 7 days. If you have trouble,
-                contact Laud directly at
-                <a href="mailto:hello@laudtetteh.io" style="color:#71717a;">hello@laudtetteh.io</a>.
+              <p style="color:#94a3b8;font-size:12px;margin:32px 0 0;line-height:1.6;">
+                This link is personal to you and expires after 7 days. If you have trouble,
+                contact Laud at
+                <a href="mailto:hello@laudtetteh.io" style="color:#1e3a8a;text-decoration:none;">hello@laudtetteh.io</a>.
               </p>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="padding-top:24px;">
-              <p style="color:#3f3f46;font-size:12px;margin:0;text-align:center;">
-                Sent via LaudBot · laudtetteh.io
+            <td style="padding-top:20px;">
+              <p style="color:#cbd5e1;font-size:12px;margin:0;text-align:center;">
+                Sent via LaudBot &middot; <a href="https://laudtetteh.io" style="color:#cbd5e1;text-decoration:none;">laudtetteh.io</a>
               </p>
             </td>
           </tr>
