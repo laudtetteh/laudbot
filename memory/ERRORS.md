@@ -15,6 +15,15 @@
 
 ---
 
+## 2026-04-06 — FastAPI 204 routes crash backend at import time without response_model=None
+
+**Symptom**: Backend fails to start with `AssertionError: Status code 204 must not have a response body` — thrown at module import, before the app serves a single request.
+**Root cause**: FastAPI requires `response_model=None` on any route decorated with `status_code=204`. Omitting it causes a hard assert during route registration.
+**Fix**: Add `response_model=None` to the `@router.post/delete(status_code=204, ...)` decorator.
+**Watch for**: Any future endpoint that returns 204 (no content) — resend, revoke, delete-style actions.
+
+---
+
 ## 2026-04-04 — useSearchParams() breaks next build in standalone output mode
 
 **Symptom**: `next build` fails with "useSearchParams() should be wrapped in a suspense boundary" on `/invite` page. Build exits with code 1.
