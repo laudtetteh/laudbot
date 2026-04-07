@@ -8,7 +8,7 @@
 
 LaudBot is a two-service web application: a FastAPI backend that handles API requests and LLM orchestration, and a Next.js frontend that provides the chat and admin interfaces. All AI calls are routed through a provider-agnostic abstraction layer so the LLM provider can be swapped without touching business logic.
 
-Access is invite-only. The admin generates invite links from an in-app panel; recruiter JWTs are issued when an invite link is accepted. Admins authenticate via username + password → admin JWT. All protected endpoints validate JWTs via FastAPI dependency injection with strict role separation.
+Access is invite-only. The admin generates invite links from an in-app panel; visitor JWTs are issued when an invite link is accepted. Admins authenticate via username + password → admin JWT. All protected endpoints validate JWTs via FastAPI dependency injection with strict role separation.
 
 ---
 
@@ -22,7 +22,7 @@ Access is invite-only. The admin generates invite links from an in-app panel; re
 │  │          Next.js Frontend (port 3001)              │  │
 │  │                                                    │  │
 │  │  /            /chat          /admin                │  │
-│  │  (landing)    (recruiter,    (admin login gate +   │  │
+│  │  (landing)    (visitor,      (admin login gate +   │  │
 │  │               JWT-gated)     controls)             │  │
 │  │                                                    │  │
 │  │  /invite      /invite-required                     │  │
@@ -51,7 +51,7 @@ Access is invite-only. The admin generates invite links from an in-app panel; re
 │  GET  /api/admin/modes/{mode}/prompts                    │
 │  PUT  /api/admin/modes/{mode}/prompts                    │
 │                                                          │
-│  Recruiter (requires recruiter JWT)                      │
+│  Visitor (requires visitor JWT)                          │
 │  POST /api/chat                                          │
 │  GET  /api/chat/prompts                                  │
 │                                                          │
@@ -59,7 +59,7 @@ Access is invite-only. The admin generates invite links from an in-app panel; re
 │  │                Auth layer (core/)                 │   │
 │  │  security.py     — JWT create/decode, bcrypt      │   │
 │  │  dependencies.py — get_current_admin,             │   │
-│  │                    get_current_recruiter deps      │   │
+│  │                    get_current_visitor deps        │   │
 │  └──────────────────────────────────────────────────┘   │
 │                                                          │
 │  ┌──────────────────────────────────────────────────┐   │
@@ -105,14 +105,14 @@ Access is invite-only. The admin generates invite links from an in-app panel; re
 
 ---
 
-## Request flow — recruiter chat
+## Request flow — visitor chat
 
-1. Admin generates an invite in the admin panel → `POST /api/admin/invitations` creates a UUID token stored in `app.state.invite_tokens` with mode config: `allowed_modes`, `default_mode`, `can_switch_modes`
+1. Admin generates an invite in the admin panel → `POST /api/admin/invitations` creates a UUID token stored in the DB with mode config: `allowed_modes`, `default_mode`, `can_switch_modes`
 2. Resend delivers an invite email with the accept link
-3. Recruiter clicks the link → `/invite?token=<uuid>`
-4. Frontend POSTs `POST /api/auth/accept-invite` → backend validates token, returns recruiter JWT containing `recruiter_id`, `role: recruiter`, `invite_id`, `allowed_modes`, `default_mode`, `can_switch_modes`
-5. Frontend decodes JWT (client-side base64url, no library), stores all fields in `sessionStorage`, redirects to `/chat`
-6. Recruiter sends a message → frontend POSTs `/api/chat` with `Authorization: Bearer <recruiter_jwt>` and `active_mode`
+3. Visitor clicks the link → `/invite?token=<uuid>`
+4. Frontend POSTs `POST /api/auth/accept-invite` → backend validates token, returns visitor JWT containing `visitor_id`, `role: visitor`, `invite_id`, `allowed_modes`, `default_mode`, `can_switch_modes`
+5. Frontend decodes JWT (client-side base64url, no library), stores all fields in `localStorage`, redirects to `/chat`
+6. Visitor sends a message → frontend POSTs `/api/chat` with `Authorization: Bearer <visitor_jwt>` and `active_mode`
 7. Backend resolves mode: `active_mode` from request body → `default_mode` from JWT; validates mode is in `allowed_modes` and globally enabled in `modes_config`
 8. `compose_system_prompt(mode, mode_overlays)` builds: `base_prompt + mode_lock + overlay` (mode lock prevents cross-mode drift)
 9. Active `LLMConfig` selects provider → `provider_factory` returns correct `LLMService`
@@ -136,8 +136,8 @@ Three modes are defined in `backend/app/services/llm/base.py` as `MODES: list[st
 
 | Mode | Persona |
 |------|---------|
-| `recruiter` | Professional — career, skills, role fit |
-| `coworker` | Technical — architecture, decisions, engineering craft |
+| `professional` | Professional — career, skills, role fit |
+| `peer` | Technical — architecture, decisions, engineering craft |
 | `buddy` | Casual and playful, with friendly roasting |
 
 Each mode has:
@@ -145,8 +145,8 @@ Each mode has:
 - A **mode lock** injected by `compose_system_prompt()` — explicit instruction to the model not to drift into other modes' behavior regardless of user input
 - A **suggested prompts list** — configurable per mode in the admin panel, returned to the chat UI as clickable chips
 
-Per-invite mode config (embedded in recruiter JWT):
-- `allowed_modes` — which modes the recruiter can use
+Per-invite mode config (embedded in visitor JWT):
+- `allowed_modes` — which modes the visitor can use
 - `default_mode` — which mode is active when they arrive
 - `can_switch_modes` — whether they can switch modes mid-session
 
@@ -214,10 +214,10 @@ All LLM calls go through `LLMService` (abstract base class). `ClaudeService` and
 Active provider is `app.state.llm_config` — an in-memory `LLMConfig(provider, model)` updated via `PUT /api/admin/llm-config`. Changes take effect on the next request. `AVAILABLE_MODELS` in `base.py` is the single source of truth for validation and populates the dropdown.
 
 **JWT auth with role separation**
-Two roles: `admin` and `recruiter`. Same JWT utilities, different `Depends()` guards. Admin JWT rejected on `/api/chat` (403); recruiter JWT rejected on `/api/admin/*` (403). No user DB needed at this stage.
+Two roles: `admin` and `visitor`. Same JWT utilities, different `Depends()` guards. Admin JWT rejected on `/api/chat` (403); visitor JWT rejected on `/api/admin/*` (403). No user DB needed at this stage.
 
-**Recruiter JWT carries full mode config**
-`allowed_modes`, `default_mode`, and `can_switch_modes` live in the JWT. When a recruiter accepts their invite these are embedded at token issuance — no DB lookup needed at chat time. The `recruiter_id` is also embedded; when chat history persistence lands, messages are keyed to it with no auth layer refactor.
+**Visitor JWT carries full mode config**
+`allowed_modes`, `default_mode`, and `can_switch_modes` live in the JWT. When a visitor accepts their invite these are embedded at token issuance — no DB lookup needed at chat time. The `visitor_id` is also embedded; chat history messages are keyed to it.
 
 **Mode isolation via explicit mode lock in system prompt**
 Without a mode constraint, models drift — a buddy-mode user phrasing a question technically causes the model to start answering as if in co-worker mode. Fix: `compose_system_prompt()` injects an `## ACTIVE MODE: {MODE}` block with an explicit constraint before the overlay. This is a structural guarantee, not a prompt-engineering suggestion.

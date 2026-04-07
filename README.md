@@ -49,7 +49,7 @@ It is not a generic chatbot. It is a curated, privacy-aware professional agent t
 ### Infrastructure
 - Full CI/CD: push to `main` → build production images → push to GHCR → deploy to DigitalOcean App Platform
 - Provider-agnostic LLM service layer — new providers subclass one interface
-- JWT role separation: admin tokens rejected on recruiter routes and vice versa
+- JWT role separation: admin tokens rejected on visitor routes and vice versa
 
 ---
 
@@ -61,7 +61,7 @@ It is not a generic chatbot. It is a curated, privacy-aware professional agent t
 | Backend | FastAPI (Python 3.12) |
 | AI | Anthropic Claude + OpenAI — abstracted behind a provider-agnostic service layer |
 | Email | Resend (transactional invite delivery) |
-| Auth | JWT (HS256) — admin credentials via env vars, recruiter access via invite tokens |
+| Auth | JWT (HS256) — admin credentials via env vars, visitor access via invite tokens |
 | Infra | Docker + Docker Compose (local), DigitalOcean App Platform (production) |
 | CI/CD | GitHub Actions → GHCR → DO App Platform |
 | Database | PostgreSQL + pgvector — planned (v4+) |
@@ -126,8 +126,8 @@ Copy the example overlay files and customise them:
 
 ```bash
 cp data/approved/system_prompt.md.example data/approved/system_prompt.md
-cp data/approved/overlays/recruiter.md.example data/approved/overlays/recruiter.md
-cp data/approved/overlays/coworker.md.example data/approved/overlays/coworker.md
+cp data/approved/overlays/professional.md.example data/approved/overlays/professional.md
+cp data/approved/overlays/peer.md.example data/approved/overlays/peer.md
 cp data/approved/overlays/buddy.md.example data/approved/overlays/buddy.md
 ```
 
