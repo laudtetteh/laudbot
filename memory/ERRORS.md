@@ -15,6 +15,15 @@
 
 ---
 
+## 2026-04-07 — Migration UniqueViolationError on local after partial DB state
+
+**Symptom**: After fixing a migration table name typo, local backend still failed on startup — `UniqueViolationError: duplicate key value violates unique constraint "mode_config_pkey" — Key (mode)=(professional) already exists`.
+**Root cause**: Local DB had accumulated a `professional` row from a prior failed migration attempt. The migration tried to rename `recruiter` → `professional` but that row already existed, hitting a PK collision.
+**Fix**: `docker compose down -v && docker compose up -d` — wipes the local postgres volume, all migrations run clean from scratch.
+**Watch for**: Any time a migration fails mid-run locally and the container is restarted without wiping the volume. Partial state can leave rows that conflict with subsequent runs. When in doubt on local: nuke the volume.
+
+---
+
 ## 2026-04-06 — FastAPI 204 routes crash backend at import time without response_model=None
 
 **Symptom**: Backend fails to start with `AssertionError: Status code 204 must not have a response body` — thrown at module import, before the app serves a single request.
