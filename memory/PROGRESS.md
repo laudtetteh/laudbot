@@ -5,6 +5,46 @@
 
 ---
 
+## 2026-04-06 — fix: visitor session persistence + chat ordering + UI polish (PRs #71, #73)
+
+- feat(theme): dark/light toggle (sun/moon), anti-flash inline script, Tailwind `darkMode: "class"`,
+  full dark pass on all pages (chat, admin, home, invite, invite-required) — PR #71 merged
+- style(dark): softened dark mode palette — card surfaces zinc-900→zinc-800, borders zinc-800→zinc-700,
+  secondary text one step lighter; typing dot + scrollbar tokens updated in globals.css — PR #71
+- fix(session): `sessionStorage` → `localStorage` for visitor token + mode config; session now persists
+  across tabs; Exit button is the only logout path (explicit key removal) — PR #73
+- fix(chat): user + assistant messages were saved with identical `created_at`; assistant now offset +1ms
+  so ORDER BY created_at is always deterministic — fixes scrambled history on refresh — PR #73
+- style(chat): renamed "Read more ↓" toggle to "TL;DR ↓" — PR #73
+- content: Buddy overlay rewritten — humor weights (50% self-dep / 20% absurdist / 20% wordplay / 10%
+  deadpan), comedian anchors (Chappelle/Gervais/Jeffries/Normand), mild expletives allowed, fabricated
+  takes allowed with flag, explicit "pick one thing and commit" anti-comprehensiveness rule
+- content: system_prompt.md — added "lead with the point on long answers" conversation discipline rule
+- PRs #66, #67 merged (from previous session entries below)
+
+---
+
+## 2026-04-06 — feat: UI quick wins + expandable answers (PRs #66, #67 open)
+
+- feat(chat): rename "New conversation" → "+ New Chat", canonical pill order, mobile flex-col layout — PR #66, issue #68
+- feat(chat): collapse long assistant messages (>600 chars) with CSS max-h clip, gradient fade, "Read more / Show less" toggle — PR #67, issue #69
+- Fixed PR template compliance: both PRs updated with proper Summary/Changes/Closes/Test plan/Notes format, labels added (type: feat, area: frontend)
+- Fixed "The Rig" naming in memory/PROGRESS.md (was "agentic coding system" in two historical entries)
+- Confirmed system_prompt.md already uses "The Rig" correctly; .example files have no references to either name
+
+---
+
+## 2026-04-06 — feat: admin system prompt panel (PR #65 merged)
+
+- New `system_config` DB table (Alembic migration 002) — key/value store with updated_at
+- GET/POST `/api/admin/system-prompt` — source-labelled read + DB upsert
+- `compose_system_prompt()` accepts `base_override: str | None` — DB value takes precedence
+- `app.state.system_prompt` loaded from DB at startup, updated in-memory on admin save
+- Admin UI: SystemPromptSection with monospace textarea, source badge, char count, last-saved timestamp
+- Both SystemPromptSection and OverlayEditorSection collapsed by default — Edit/Lock toggle to prevent accidental changes
+
+---
+
 ## 2026-04-06 — fix: SSL cert verification for DO managed Postgres (PR #64)
 
 - `ssl=True` in asyncpg uses Python default SSL which verifies the server cert chain
@@ -329,9 +369,9 @@
 
 ---
 
-## 2026-04-03 — agentic coding system installed
+## 2026-04-03 — The Rig installed
 
-- Installed project-level agentic coding system: CLAUDE.md, docs/, rules/, tasks/,
+- Installed project-level agentic coding system (The Rig): CLAUDE.md, docs/, rules/, tasks/,
   memory/, prompts/, processes/, .claude/commands/, .claude/hooks/
 - Global layer also set up: ~/.claude/CLAUDE.md merged with existing config,
   skills/ populated (refactor, write-tests, code-review, debug, explain)
