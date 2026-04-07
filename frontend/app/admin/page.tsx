@@ -20,6 +20,24 @@ interface InviteResult {
 type SaveState = "idle" | "saving" | "saved" | "error";
 type AuthState = "checking" | "unauthenticated" | "authenticated";
 type InviteState = "idle" | "generating" | "done" | "error";
+type ActionState = "idle" | "loading" | "done" | "error";
+type InviteStatus = "pending" | "accepted" | "revoked";
+type SortOrder = "newest" | "oldest";
+type StatusFilter = "all" | InviteStatus;
+
+interface InvitationRecord {
+  id: string;
+  email: string;
+  note: string | null;
+  invite_url: string;
+  allowed_modes: string[];
+  default_mode: string;
+  can_switch_modes: boolean;
+  created_at: string;
+  accepted_at: string | null;
+  revoked_at: string | null;
+  visitor_id: string | null;
+}
 
 const ALL_MODES = ["professional", "peer", "buddy"] as const;
 type Mode = (typeof ALL_MODES)[number];
@@ -1150,6 +1168,285 @@ function SystemPromptSection({
 }
 
 // ---------------------------------------------------------------------------
+// Invite history section
+// ---------------------------------------------------------------------------
+
+/** Derives the display status from an invitation record's timestamp fields. */
+function getInviteStatus(inv: InvitationRecord): InviteStatus {
+  if (inv.revoked_at) return "revoked";
+  if (inv.accepted_at) return "accepted";
+  return "pending";
+}
+
+const STATUS_STYLES: Record<InviteStatus, string> = {
+  pending: "bg-amber-100/60 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400",
+  accepted: "bg-emerald-100/60 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400",
+  revoked: "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500",
+};
+
+const STATUS_LABELS: Record<InviteStatus, string> = {
+  pending: "Pending",
+  accepted: "Accepted",
+  revoked: "Revoked",
+};
+
+/**
+ * Shows all sent invitations with status badges and resend / revoke actions.
+ * Supports client-side sort, status filter, and email search.
+ */
+function InviteHistorySection({
+  token,
+  onSessionExpired,
+}: {
+  token: string;
+  onSessionExpired: () => void;
+}) {
+  const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [search, setSearch] = useState("");
+  const [resendStates, setResendStates] = useState<Record<string, ActionState>>({});
+  const [revokeStates, setRevokeStates] = useState<Record<string, ActionState>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/invitations", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (res) => {
+        if (res.status === 401) { onSessionExpired(); return; }
+        if (!res.ok) throw new Error(`Load failed (${res.status})`);
+        return res.json();
+      })
+      .then((data?: { invitations: InvitationRecord[] }) => {
+        if (data) setInvitations(data.invitations);
+      })
+      .catch((err: unknown) => {
+        setLoadError(err instanceof Error ? err.message : "Failed to load invite history.");
+      })
+      .finally(() => setLoading(false));
+  }, [token, onSessionExpired]);
+
+  async function handleResend(inv: InvitationRecord) {
+    setResendStates((prev) => ({ ...prev, [inv.id]: "loading" }));
+    try {
+      const res = await fetch(`/api/admin/invitations/${inv.id}/resend`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) { onSessionExpired(); return; }
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      setResendStates((prev) => ({ ...prev, [inv.id]: "done" }));
+      setTimeout(() => setResendStates((prev) => ({ ...prev, [inv.id]: "idle" })), 3000);
+    } catch {
+      setResendStates((prev) => ({ ...prev, [inv.id]: "error" }));
+      setTimeout(() => setResendStates((prev) => ({ ...prev, [inv.id]: "idle" })), 3000);
+    }
+  }
+
+  async function handleRevoke(inv: InvitationRecord) {
+    setRevokeStates((prev) => ({ ...prev, [inv.id]: "loading" }));
+    try {
+      const res = await fetch(`/api/admin/invitations/${inv.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) { onSessionExpired(); return; }
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      // Update local state — stamp revoked_at so status updates immediately.
+      setInvitations((prev) =>
+        prev.map((i) =>
+          i.id === inv.id ? { ...i, revoked_at: new Date().toISOString() } : i,
+        ),
+      );
+      setRevokeStates((prev) => ({ ...prev, [inv.id]: "idle" }));
+    } catch {
+      setRevokeStates((prev) => ({ ...prev, [inv.id]: "error" }));
+      setTimeout(() => setRevokeStates((prev) => ({ ...prev, [inv.id]: "idle" })), 3000);
+    }
+  }
+
+  async function handleCopyLink(inv: InvitationRecord) {
+    await navigator.clipboard.writeText(inv.invite_url);
+    setCopiedId(inv.id);
+    setTimeout(() => setCopiedId(null), 2500);
+  }
+
+  // Client-side filter + sort.
+  const filtered = invitations
+    .filter((inv) => {
+      if (statusFilter !== "all" && getInviteStatus(inv) !== statusFilter) return false;
+      if (search && !inv.email.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return sortOrder === "newest" ? -diff : diff;
+    });
+
+  const statusCounts: Record<StatusFilter, number> = {
+    all: invitations.length,
+    pending: invitations.filter((i) => getInviteStatus(i) === "pending").length,
+    accepted: invitations.filter((i) => getInviteStatus(i) === "accepted").length,
+    revoked: invitations.filter((i) => getInviteStatus(i) === "revoked").length,
+  };
+
+  return (
+    <section className="mb-8">
+      <SectionHeader
+        title="Invite history"
+        description="All sent invitations. Resend the original link or revoke access."
+      />
+
+      {loadError && (
+        <div className="mb-4 rounded-xl border border-red-200/60 bg-red-50/60 px-4 py-3 text-sm text-red-600 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-400">
+          {loadError}
+        </div>
+      )}
+
+      {/* Controls row */}
+      {!loading && !loadError && (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          {/* Status filter tabs */}
+          <div className="flex rounded-lg border border-zinc-200/70 bg-zinc-50 dark:border-zinc-700/70 dark:bg-zinc-900">
+            {(["all", "pending", "accepted", "revoked"] as StatusFilter[]).map((f) => (
+              <button
+                key={f}
+                onClick={() => setStatusFilter(f)}
+                className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors first:rounded-l-lg last:rounded-r-lg ${
+                  statusFilter === f
+                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                }`}
+              >
+                {f === "all" ? "All" : STATUS_LABELS[f as InviteStatus]}{" "}
+                <span className="ml-0.5 opacity-60">{statusCounts[f]}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Sort toggle */}
+          <button
+            onClick={() => setSortOrder((o) => (o === "newest" ? "oldest" : "newest"))}
+            className="ml-auto rounded-lg border border-zinc-200 px-3 py-1.5 text-xs text-zinc-500 transition-colors hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
+          >
+            {sortOrder === "newest" ? "Newest first ↓" : "Oldest first ↑"}
+          </button>
+
+          {/* Email search */}
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search email…"
+            className="rounded-lg border border-zinc-200/70 bg-white px-3 py-1.5 text-xs text-zinc-700 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/70 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-600 dark:focus:border-zinc-500 sm:w-44"
+          />
+        </div>
+      )}
+
+      <Card className={loading ? "animate-pulse" : ""}>
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-12 rounded-lg bg-zinc-100 dark:bg-zinc-800" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-xs text-zinc-400 dark:text-zinc-500 py-4">
+            {invitations.length === 0 ? "No invites sent yet." : "No invites match the current filter."}
+          </p>
+        ) : (
+          <div className="divide-y divide-zinc-200/60 dark:divide-zinc-700/60">
+            {filtered.map((inv) => {
+              const status = getInviteStatus(inv);
+              const isRevoked = status === "revoked";
+              const resendState = resendStates[inv.id] ?? "idle";
+              const revokeState = revokeStates[inv.id] ?? "idle";
+
+              return (
+                <div key={inv.id} className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:gap-4">
+                  {/* Left: identity + meta */}
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-medium ${STATUS_STYLES[status]}`}>
+                        {STATUS_LABELS[status]}
+                      </span>
+                      <span className={`truncate text-sm font-medium ${isRevoked ? "text-zinc-400 dark:text-zinc-500 line-through" : "text-zinc-800 dark:text-zinc-200"}`}>
+                        {inv.email}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+                      {/* Mode badges */}
+                      {inv.allowed_modes.map((m) => (
+                        <span
+                          key={m}
+                          className={`rounded px-1.5 py-0.5 capitalize ${
+                            m === inv.default_mode
+                              ? "bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
+                              : "bg-zinc-100 text-zinc-400 dark:bg-zinc-800/60 dark:text-zinc-500"
+                          }`}
+                        >
+                          {m}{m === inv.default_mode ? " ●" : ""}
+                        </span>
+                      ))}
+                      {inv.can_switch_modes && (
+                        <span className="text-zinc-400 dark:text-zinc-500">can switch</span>
+                      )}
+                      <span>·</span>
+                      <span>{new Date(inv.created_at).toLocaleDateString()}</span>
+                      {inv.accepted_at && (
+                        <span>· accepted {new Date(inv.accepted_at).toLocaleDateString()}</span>
+                      )}
+                      {inv.note && (
+                        <span className="italic">· {inv.note}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right: actions */}
+                  <div className="flex shrink-0 items-center gap-2">
+                    {/* Copy link */}
+                    <button
+                      onClick={() => handleCopyLink(inv)}
+                      disabled={isRevoked}
+                      className="rounded-lg border border-zinc-200 px-2.5 py-1 text-xs text-zinc-500 transition-colors hover:border-zinc-400 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
+                    >
+                      {copiedId === inv.id ? "Copied ✓" : "Copy link"}
+                    </button>
+
+                    {/* Resend */}
+                    <button
+                      onClick={() => handleResend(inv)}
+                      disabled={isRevoked || resendState === "loading"}
+                      className="rounded-lg border border-zinc-200 px-2.5 py-1 text-xs text-zinc-500 transition-colors hover:border-zinc-400 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
+                    >
+                      {resendState === "loading" ? "Sending…" : resendState === "done" ? "Sent ✓" : resendState === "error" ? "Failed" : "Resend"}
+                    </button>
+
+                    {/* Revoke */}
+                    {!isRevoked && (
+                      <button
+                        onClick={() => handleRevoke(inv)}
+                        disabled={revokeState === "loading"}
+                        className="rounded-lg border border-red-200/60 px-2.5 py-1 text-xs text-red-500 transition-colors hover:border-red-400 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-red-900/60 dark:text-red-500 dark:hover:border-red-700 dark:hover:text-red-400"
+                      >
+                        {revokeState === "loading" ? "Revoking…" : "Revoke"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Admin controls (shown after login)
 // ---------------------------------------------------------------------------
 
@@ -1186,6 +1483,7 @@ function AdminControls({ token, onLogout }: { token: string; onLogout: () => voi
       </div>
 
       <InviteSection token={token} onSessionExpired={onLogout} modesConfig={modesConfig} />
+      <InviteHistorySection token={token} onSessionExpired={onLogout} />
       <GlobalModesSection token={token} onSessionExpired={onLogout} modesConfig={modesConfig} onModesChange={setModesConfig} />
       <SystemPromptSection token={token} onSessionExpired={onLogout} />
       <OverlayEditorSection token={token} onSessionExpired={onLogout} />

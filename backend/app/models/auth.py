@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr
 
 
@@ -45,6 +47,33 @@ class CreateInvitationResponse(BaseModel):
     invite_token: str
     email: str
     invite_url: str
+
+
+# ---------------------------------------------------------------------------
+# Invitation list (admin)
+# ---------------------------------------------------------------------------
+
+
+class InvitationRecord(BaseModel):
+    """A single invitation row returned by GET /api/admin/invitations."""
+
+    id: str
+    email: str
+    note: str | None
+    invite_url: str
+    allowed_modes: list[str]
+    default_mode: str
+    can_switch_modes: bool
+    created_at: datetime
+    accepted_at: datetime | None
+    revoked_at: datetime | None
+    visitor_id: str | None
+
+
+class InvitationListResponse(BaseModel):
+    """Response for GET /api/admin/invitations."""
+
+    invitations: list[InvitationRecord]
 
 
 # ---------------------------------------------------------------------------
