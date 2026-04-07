@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 _DEFAULT_FROM = "LaudBot <hello@laudtetteh.io>"
 
 _MODE_LABELS: dict[str, str] = {
-    "recruiter": "Recruiter (professional)",
-    "coworker": "Co-worker (fellow engineer)",
+    "professional": "Professional",
+    "peer": "Peer",
     "buddy": "Buddy (casual & playful)",
 }
 
@@ -107,7 +107,7 @@ async def send_invite_email(
     mode: str,
     note: str | None = None,
 ) -> None:
-    """Send a recruiter invite email via Resend.
+    """Send a visitor invite email via Resend.
 
     No-ops silently if RESEND_API_KEY is not set, so local dev without
     email config still works — the invite URL is always returned in the API

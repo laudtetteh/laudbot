@@ -18,7 +18,7 @@ class Message:
 
 
 # Valid invite modes — order determines display order in admin UI.
-MODES: list[str] = ["recruiter", "coworker", "buddy"]
+MODES: list[str] = ["professional", "peer", "buddy"]
 
 # Default model IDs used when no override is provided.
 DEFAULT_MODELS: dict[str, str] = {

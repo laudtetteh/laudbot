@@ -49,7 +49,7 @@ def load_mode_overlay(mode: str) -> str:
     an empty overlay as "no overlay" and skip composition.
 
     Args:
-        mode: The mode slug (e.g. "recruiter", "technical").
+        mode: The mode slug (e.g. "professional", "peer").
 
     Returns:
         Overlay text, or empty string if not configured.
@@ -85,7 +85,7 @@ def compose_system_prompt(
 
     # Explicit mode lock — placed before the overlay so it reads as a hard constraint.
     # This prevents the model from adopting another mode's behaviour when the user
-    # phrases a request that resembles a different mode (e.g. "roast me" while in recruiter mode).
+    # phrases a request that resembles a different mode (e.g. "roast me" while in professional mode).
     mode_lock = (
         f"## ACTIVE MODE: {mode.upper()}\n\n"
         f"You are operating exclusively in **{mode}** mode for this session. "
