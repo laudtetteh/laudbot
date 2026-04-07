@@ -1,8 +1,8 @@
 """Rename mode slugs — recruiter → professional, coworker → peer.
 
-Updates existing rows in ``mode_configs`` and ``chat_messages`` to use the
+Updates existing rows in ``mode_config`` and ``chat_messages`` to use the
 new slugs. Existing admin-saved overlay text, prompts, and enabled state are
-preserved — only the slug (primary key in mode_configs) changes.
+preserved — only the slug (primary key in mode_config) changes.
 
 Revision ID: 004
 Revises: 003
@@ -24,10 +24,10 @@ def upgrade() -> None:
     """Rename recruiter → professional and coworker → peer in data rows."""
     conn = op.get_bind()
 
-    # mode_configs: mode is the primary key, so update the PK value directly.
+    # mode_config: mode is the primary key, so update the PK value directly.
     # No foreign key constraints reference this column in other tables.
-    conn.execute(text("UPDATE mode_configs SET mode = 'professional' WHERE mode = 'recruiter'"))
-    conn.execute(text("UPDATE mode_configs SET mode = 'peer' WHERE mode = 'coworker'"))
+    conn.execute(text("UPDATE mode_config SET mode = 'professional' WHERE mode = 'recruiter'"))
+    conn.execute(text("UPDATE mode_config SET mode = 'peer' WHERE mode = 'coworker'"))
 
     # chat_messages: mode column stores the slug per message row.
     conn.execute(text("UPDATE chat_messages SET mode = 'professional' WHERE mode = 'recruiter'"))
@@ -49,8 +49,8 @@ def downgrade() -> None:
     """Revert professional → recruiter and peer → coworker in data rows."""
     conn = op.get_bind()
 
-    conn.execute(text("UPDATE mode_configs SET mode = 'recruiter' WHERE mode = 'professional'"))
-    conn.execute(text("UPDATE mode_configs SET mode = 'coworker' WHERE mode = 'peer'"))
+    conn.execute(text("UPDATE mode_config SET mode = 'recruiter' WHERE mode = 'professional'"))
+    conn.execute(text("UPDATE mode_config SET mode = 'coworker' WHERE mode = 'peer'"))
 
     conn.execute(text("UPDATE chat_messages SET mode = 'recruiter' WHERE mode = 'professional'"))
     conn.execute(text("UPDATE chat_messages SET mode = 'coworker' WHERE mode = 'peer'"))
