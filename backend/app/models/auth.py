@@ -32,7 +32,7 @@ class CreateInvitationRequest(BaseModel):
 
     email: EmailStr
     note: str | None = None
-    # Mode config embedded into the recruiter JWT.
+    # Mode config embedded into the visitor JWT.
     allowed_modes: list[str]
     default_mode: str
     can_switch_modes: bool = False
@@ -63,4 +63,4 @@ class AcceptInviteResponse(BaseModel):
 
     access_token: str
     token_type: str = "bearer"
-    recruiter_id: str
+    visitor_id: str

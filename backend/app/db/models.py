@@ -3,7 +3,7 @@
 Four tables:
 - ``invitations``   — invite tokens and recruiter config (replaces app.state.invite_tokens)
 - ``mode_config``   — per-mode enabled flag, overlay, and prompts (replaces app.state.modes_*)
-- ``chat_messages`` — persisted chat history keyed to recruiter_id
+- ``chat_messages`` — persisted chat history keyed to visitor_id
 - ``system_config`` — key/value store for admin-editable runtime config (e.g. system prompt)
 """
 from __future__ import annotations
@@ -39,11 +39,11 @@ class Invitation(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
-    # Set when the recruiter accepts the invite.
+    # Set when the visitor accepts the invite.
     accepted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    recruiter_id: Mapped[uuid.UUID | None] = mapped_column(
+    visitor_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True
     )
 
@@ -62,15 +62,15 @@ class ModeConfig(Base):
 
 
 class ChatMessage(Base):
-    """One row per message turn (user or assistant) in a recruiter session."""
+    """One row per message turn (user or assistant) in a visitor session."""
 
     __tablename__ = "chat_messages"
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    # Stable identifier from the recruiter JWT — groups all messages per visitor.
-    recruiter_id: Mapped[uuid.UUID] = mapped_column(
+    # Stable identifier from the visitor JWT — groups all messages per visitor.
+    visitor_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), nullable=False, index=True
     )
     mode: Mapped[str] = mapped_column(String(50), nullable=False)

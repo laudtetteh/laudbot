@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
-from app.core.dependencies import get_current_recruiter, get_db
+from app.core.dependencies import get_current_visitor, get_db
 from app.db.models import ChatMessage, ModeConfig
 from app.models.chat import ChatRequest, ChatResponse
 from app.services.llm.base import LLMConfig
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/api")
 
 
 class ModePromptsMap(BaseModel):
-    """Suggested prompts for each of the recruiter's allowed modes."""
+    """Suggested prompts for each of the visitor's allowed modes."""
 
     prompts_by_mode: dict[str, list[str]]
 
@@ -46,7 +46,7 @@ class ChatHistoryItem(BaseModel):
 
 
 class ChatHistoryResponse(BaseModel):
-    """Paginated chat history for the authenticated recruiter."""
+    """Paginated chat history for the authenticated visitor."""
 
     messages: list[ChatHistoryItem]
     total: int
@@ -54,19 +54,19 @@ class ChatHistoryResponse(BaseModel):
 
 @router.get("/chat/prompts", response_model=ModePromptsMap)
 async def get_chat_prompts(
-    recruiter: dict = Depends(get_current_recruiter),
+    visitor: dict = Depends(get_current_visitor),
     db: AsyncSession = Depends(get_db),
 ) -> ModePromptsMap:
     """Return suggested prompts for all modes the recruiter is allowed to use.
 
     Args:
-        recruiter: Decoded recruiter JWT payload.
+        visitor: Decoded visitor JWT payload.
         db: Injected async DB session.
 
     Returns:
         Map of mode slug → list of suggested prompt strings.
     """
-    allowed_modes: list[str] = recruiter.get("allowed_modes", [])
+    allowed_modes: list[str] = visitor.get("allowed_modes", [])
     result = await db.execute(
         select(ModeConfig).where(ModeConfig.mode.in_(allowed_modes))
     )
@@ -78,25 +78,25 @@ async def get_chat_prompts(
 
 @router.get("/chat/history", response_model=ChatHistoryResponse)
 async def get_chat_history(
-    recruiter: dict = Depends(get_current_recruiter),
+    visitor: dict = Depends(get_current_visitor),
     db: AsyncSession = Depends(get_db),
 ) -> ChatHistoryResponse:
-    """Return all persisted chat messages for the authenticated recruiter.
+    """Return all persisted chat messages for the authenticated visitor.
 
-    Messages are ordered oldest-first. The ``recruiter_id`` is sourced from
+    Messages are ordered oldest-first. The ``visitor_id`` is sourced from
     the JWT ``sub`` claim so no additional lookup is needed.
 
     Args:
-        recruiter: Decoded recruiter JWT payload.
+        visitor: Decoded visitor JWT payload.
         db: Injected async DB session.
 
     Returns:
         List of message turns and total count.
     """
-    recruiter_id = uuid.UUID(recruiter["sub"])
+    visitor_id = uuid.UUID(visitor["sub"])
     result = await db.execute(
         select(ChatMessage)
-        .where(ChatMessage.recruiter_id == recruiter_id)
+        .where(ChatMessage.visitor_id == visitor_id)
         .order_by(ChatMessage.created_at)
     )
     messages = result.scalars().all()
@@ -121,7 +121,7 @@ async def get_chat_history(
 async def chat(
     body: ChatRequest,
     request: Request,
-    recruiter: dict = Depends(get_current_recruiter),
+    visitor: dict = Depends(get_current_visitor),
     db: AsyncSession = Depends(get_db),
 ) -> ChatResponse:
     """Route a user message through the active LLM and persist both turns.
@@ -133,7 +133,7 @@ async def chat(
     Args:
         body: Chat request — messages, optional provider override, active mode.
         request: FastAPI request (used to access ``app.state.llm_config``).
-        recruiter: Decoded recruiter JWT payload.
+        visitor: Decoded visitor JWT payload.
         db: Injected async DB session.
 
     Returns:
@@ -144,8 +144,8 @@ async def chat(
         HTTPException 502: If the LLM API call fails.
     """
     # --- Resolve and validate mode ---
-    allowed_modes: list[str] = recruiter.get("allowed_modes", [])
-    default_mode: str = recruiter.get("default_mode", "")
+    allowed_modes: list[str] = visitor.get("allowed_modes", [])
+    default_mode: str = visitor.get("default_mode", "")
     requested_mode = body.active_mode or default_mode
 
     if not requested_mode:
@@ -205,8 +205,11 @@ async def chat(
         ) from exc
 
     # --- Persist both turns to the DB ---
-    recruiter_id = uuid.UUID(recruiter["sub"])
+    visitor_id = uuid.UUID(visitor["sub"])
     now = datetime.now(timezone.utc)
+    # Assistant is saved 1 ms after the user message so ORDER BY created_at
+    # is always deterministic even within the same request.
+    asst_now = now + timedelta(milliseconds=1)
 
     # Persist the last user message (the one that triggered this response).
     last_user_message = next(
@@ -216,7 +219,7 @@ async def chat(
         db.add(
             ChatMessage(
                 id=uuid.uuid4(),
-                recruiter_id=recruiter_id,
+                visitor_id=visitor_id,
                 mode=requested_mode,
                 role="user",
                 content=last_user_message.content,
@@ -227,19 +230,19 @@ async def chat(
     db.add(
         ChatMessage(
             id=uuid.uuid4(),
-            recruiter_id=recruiter_id,
+            visitor_id=visitor_id,
             mode=requested_mode,
             role="assistant",
             content=response_text,
             provider=config.provider,
             model=service.model,
-            created_at=now,
+            created_at=asst_now,
         )
     )
     await db.commit()
     logger.info(
-        "chat persisted | recruiter_id=%s | mode=%s | provider=%s",
-        recruiter_id,
+        "chat persisted | visitor_id=%s | mode=%s | provider=%s",
+        visitor_id,
         requested_mode,
         config.provider,
     )

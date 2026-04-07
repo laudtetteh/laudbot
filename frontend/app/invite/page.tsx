@@ -24,7 +24,7 @@ function InviteFlow() {
       return;
     }
 
-    // Exchange the invite token for a recruiter JWT.
+    // Exchange the invite token for a visitor JWT.
     fetch("/api/auth/accept-invite", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -54,13 +54,15 @@ function InviteFlow() {
           // Non-fatal — chat will fall back to default_mode from JWT on server.
         }
 
-        // Store the recruiter JWT and mode config in sessionStorage so they
-        // persist across navigation within this tab but not across sessions.
-        sessionStorage.setItem("recruiter_token", data.access_token);
-        sessionStorage.setItem("recruiter_id", data.recruiter_id);
-        sessionStorage.setItem("active_mode", defaultMode);
-        sessionStorage.setItem("allowed_modes", JSON.stringify(allowedModes));
-        sessionStorage.setItem("can_switch_modes", String(canSwitchModes));
+        // Store the visitor JWT and mode config in localStorage so the
+        // session persists across tabs and survives page refreshes.
+        // The Exit button explicitly clears these keys — that is the only
+        // intended logout path.
+        localStorage.setItem("visitor_token", data.access_token);
+        localStorage.setItem("visitor_id", data.visitor_id);
+        localStorage.setItem("active_mode", defaultMode);
+        localStorage.setItem("allowed_modes", JSON.stringify(allowedModes));
+        localStorage.setItem("can_switch_modes", String(canSwitchModes));
         setState("done");
         router.replace("/chat");
       })

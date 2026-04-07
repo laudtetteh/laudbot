@@ -1,4 +1,4 @@
-"""Auth routes — admin login and recruiter invite flow.
+"""Auth routes — admin login and visitor invite flow.
 
 All invite state is now persisted to the ``invitations`` DB table.
 """
@@ -79,13 +79,13 @@ async def create_invitation(
     body: CreateInvitationRequest,
     db: AsyncSession = Depends(get_db),
 ) -> CreateInvitationResponse:
-    """Generate a recruiter invite token and persist it to the DB.
+    """Generate a visitor invite token and persist it to the DB.
 
     Validates that all requested modes are valid and globally enabled.
     The invite URL is constructed from the ``FRONTEND_URL`` env var.
 
     Args:
-        body: Recruiter email, optional note, and mode config.
+        body: Visitor email, optional note, and mode config.
         db: Injected async DB session.
 
     Returns:
@@ -158,10 +158,10 @@ async def accept_invite(
     body: AcceptInviteRequest,
     db: AsyncSession = Depends(get_db),
 ) -> AcceptInviteResponse:
-    """Exchange an invite token for a recruiter JWT.
+    """Exchange an invite token for a visitor JWT.
 
     Looks up the token in the ``invitations`` table, stamps ``accepted_at``
-    and ``recruiter_id``, then returns a signed JWT. The token remains valid
+    and ``visitor_id``, then returns a signed JWT. The token remains valid
     for repeat visits (idempotent accept).
 
     Args:
@@ -169,7 +169,7 @@ async def accept_invite(
         db: Injected async DB session.
 
     Returns:
-        Recruiter JWT and the durable recruiter_id.
+        Visitor JWT and the durable visitor_id.
 
     Raises:
         HTTPException 401: If the invite token is not recognised.
@@ -193,17 +193,17 @@ async def accept_invite(
             detail="Invalid or expired invite token",
         )
 
-    # Use existing recruiter_id if this token was already accepted.
-    recruiter_id = invitation.recruiter_id or uuid.uuid4()
+    # Use existing visitor_id if this token was already accepted.
+    visitor_id = invitation.visitor_id or uuid.uuid4()
 
     invitation.accepted_at = datetime.now(timezone.utc)
-    invitation.recruiter_id = recruiter_id
+    invitation.visitor_id = visitor_id
     await db.commit()
 
     token = create_token(
         {
-            "sub": str(recruiter_id),
-            "role": "recruiter",
+            "sub": str(visitor_id),
+            "role": "visitor",
             "invite_id": str(invitation.id),
             "allowed_modes": invitation.allowed_modes,
             "default_mode": invitation.default_mode,
@@ -214,5 +214,5 @@ async def accept_invite(
 
     return AcceptInviteResponse(
         access_token=token,
-        recruiter_id=str(recruiter_id),
+        visitor_id=str(visitor_id),
     )

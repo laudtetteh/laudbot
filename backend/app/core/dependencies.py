@@ -1,9 +1,9 @@
 """FastAPI dependency functions.
 
 Provides:
-- ``get_db``              — yields an async DB session per request
-- ``get_current_admin``   — validates admin JWT and returns payload
-- ``get_current_recruiter`` — validates recruiter JWT and returns payload
+- ``get_db``             — yields an async DB session per request
+- ``get_current_admin``  — validates admin JWT and returns payload
+- ``get_current_visitor`` — validates visitor JWT and returns payload
 """
 from __future__ import annotations
 
@@ -78,12 +78,12 @@ def get_current_admin(
     return _extract_payload(credentials, required_role="admin")
 
 
-def get_current_recruiter(
+def get_current_visitor(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
 ) -> dict:
-    """FastAPI dependency — requires a valid recruiter JWT.
+    """FastAPI dependency — requires a valid visitor JWT.
 
     Returns:
-        Decoded JWT payload for the authenticated recruiter.
+        Decoded JWT payload for the authenticated visitor.
     """
-    return _extract_payload(credentials, required_role="recruiter")
+    return _extract_payload(credentials, required_role="visitor")
