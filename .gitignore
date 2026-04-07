@@ -1,3 +1,6 @@
+# Archive folder — local holding area, never committed
+data/_archive/
+
 # Approved source data — never committed
 # Ignore all content in approved subdirs, but preserve .gitkeep markers
 data/approved/resume/*
