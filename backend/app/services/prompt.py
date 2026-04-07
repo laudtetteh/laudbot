@@ -9,6 +9,9 @@ _DEFAULT_PATH = "/data/approved/system_prompt.md"
 # Directory where per-mode overlay files live (gitignored, owner-managed).
 _OVERLAYS_DIR = Path(os.getenv("OVERLAYS_DIR", "/data/approved/overlays"))
 
+# Directory where per-mode suggested prompt files live (gitignored, owner-managed).
+_PROMPTS_DIR = Path(os.getenv("PROMPTS_DIR", "/data/approved/prompts"))
+
 _FALLBACK_PROMPT = (
     "You are LaudBot, a professional agent that answers questions about Laud's "
     "background, projects, skills, and career direction. "
@@ -42,11 +45,14 @@ def load_base_prompt() -> str:
 
 
 def load_mode_overlay(mode: str) -> str:
-    """Load the overlay file for *mode* from disk, if present.
+    """Load the overlay text for *mode*, with two fallback levels.
 
-    Overlay files live at OVERLAYS_DIR/<mode>.md and are gitignored.
-    Returns an empty string if the file does not exist — callers treat
-    an empty overlay as "no overlay" and skip composition.
+    Resolution order:
+    1. ``OVERLAY_{MODE}`` env var — used in production (DO App Platform) where
+       no volume mount is available. Set the full overlay content as a secret.
+    2. File at ``OVERLAYS_DIR/<mode>.md`` — used in local Docker via volume mount.
+       These files are gitignored (owner-managed).
+    3. Empty string — callers treat an empty overlay as "no overlay".
 
     Args:
         mode: The mode slug (e.g. "professional", "peer").
@@ -54,10 +60,46 @@ def load_mode_overlay(mode: str) -> str:
     Returns:
         Overlay text, or empty string if not configured.
     """
+    env_val = os.getenv(f"OVERLAY_{mode.upper()}", "").strip()
+    if env_val:
+        return env_val
+
     overlay_path = _OVERLAYS_DIR / f"{mode}.md"
     if overlay_path.exists():
         return overlay_path.read_text(encoding="utf-8").strip()
+
     return ""
+
+
+def load_mode_prompts(mode: str) -> list[str]:
+    """Load the suggested prompts for *mode*, with two fallback levels.
+
+    Resolution order:
+    1. ``SUGGESTED_PROMPTS_{MODE}`` env var — newline-separated list of prompts.
+       Used in production (DO App Platform) where no volume mount is available.
+    2. File at ``PROMPTS_DIR/<mode>.txt`` — one prompt per line, used in local
+       Docker via volume mount. These files are gitignored (owner-managed).
+    3. Empty list — callers treat an empty list as "no suggested prompts".
+
+    Args:
+        mode: The mode slug (e.g. "professional", "peer").
+
+    Returns:
+        List of suggested prompt strings, or empty list if not configured.
+    """
+    env_val = os.getenv(f"SUGGESTED_PROMPTS_{mode.upper()}", "").strip()
+    if env_val:
+        return [line.strip() for line in env_val.splitlines() if line.strip()]
+
+    prompts_path = _PROMPTS_DIR / f"{mode}.txt"
+    if prompts_path.exists():
+        return [
+            line.strip()
+            for line in prompts_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+
+    return []
 
 
 def compose_system_prompt(
