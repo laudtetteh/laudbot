@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
       {/* eslint-disable-next-line @next/next/no-before-interactive-script-outside-document */}
       <head>
         <script dangerouslySetInnerHTML={{ __html: ANTI_FLASH_SCRIPT }} />

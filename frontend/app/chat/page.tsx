@@ -86,8 +86,9 @@ export default function ChatPage() {
     });
   };
 
-  /** Load messages for a specific conversation and set it as active. */
-  async function loadConversation(conversationId: string, storedToken: string) {
+  /** Load messages for a specific conversation and set it as active.
+   *  Also switches the active mode to match the conversation's mode. */
+  async function loadConversation(conversationId: string, storedToken: string, mode?: string) {
     setHistoryLoading(true);
     setHistoryError(null);
     try {
@@ -106,6 +107,11 @@ export default function ChatPage() {
         }))
       );
       setActiveConversationId(conversationId);
+      // Sync the mode pills to match this conversation.
+      if (mode) {
+        setActiveMode(mode);
+        localStorage.setItem("active_mode", mode);
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       setHistoryError(`Couldn't load conversation: ${msg}`);
@@ -171,7 +177,7 @@ export default function ChatPage() {
           // Filter to conversations matching the active mode, fall back to most recent overall.
           const modeMatch = convos.find((c) => c.mode === mode);
           const target = modeMatch ?? convos[0];
-          await loadConversation(target.conversation_id, stored);
+          await loadConversation(target.conversation_id, stored, target.mode);
         } else {
           // No history — generate a fresh conversation ID ready for first send.
           setActiveConversationId(crypto.randomUUID());
@@ -337,7 +343,7 @@ export default function ChatPage() {
               <button
                 key={conv.conversation_id}
                 onClick={() => {
-                  if (token) loadConversation(conv.conversation_id, token);
+                  if (token) loadConversation(conv.conversation_id, token, conv.mode);
                   setSidebarOpen(false);
                 }}
                 className={`w-full px-4 py-3 text-left transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900 ${
