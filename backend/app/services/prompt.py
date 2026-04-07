@@ -9,6 +9,9 @@ _DEFAULT_PATH = "/data/approved/system_prompt.md"
 # Directory where per-mode overlay files live (gitignored, owner-managed).
 _OVERLAYS_DIR = Path(os.getenv("OVERLAYS_DIR", "/data/approved/overlays"))
 
+# Directory where per-mode suggested prompt files live (gitignored, owner-managed).
+_PROMPTS_DIR = Path(os.getenv("PROMPTS_DIR", "/data/approved/prompts"))
+
 _FALLBACK_PROMPT = (
     "You are LaudBot, a professional agent that answers questions about Laud's "
     "background, projects, skills, and career direction. "
@@ -69,12 +72,14 @@ def load_mode_overlay(mode: str) -> str:
 
 
 def load_mode_prompts(mode: str) -> list[str]:
-    """Load the suggested prompts for *mode*, with one env var source.
+    """Load the suggested prompts for *mode*, with two fallback levels.
 
     Resolution order:
     1. ``SUGGESTED_PROMPTS_{MODE}`` env var — newline-separated list of prompts.
-       Used in production where DB is seeded fresh on each deploy.
-    2. Empty list — callers treat an empty list as "no suggested prompts".
+       Used in production (DO App Platform) where no volume mount is available.
+    2. File at ``PROMPTS_DIR/<mode>.txt`` — one prompt per line, used in local
+       Docker via volume mount. These files are gitignored (owner-managed).
+    3. Empty list — callers treat an empty list as "no suggested prompts".
 
     Args:
         mode: The mode slug (e.g. "professional", "peer").
@@ -85,6 +90,15 @@ def load_mode_prompts(mode: str) -> list[str]:
     env_val = os.getenv(f"SUGGESTED_PROMPTS_{mode.upper()}", "").strip()
     if env_val:
         return [line.strip() for line in env_val.splitlines() if line.strip()]
+
+    prompts_path = _PROMPTS_DIR / f"{mode}.txt"
+    if prompts_path.exists():
+        return [
+            line.strip()
+            for line in prompts_path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+
     return []
 
 

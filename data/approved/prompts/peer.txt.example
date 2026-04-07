@@ -1,0 +1,5 @@
+Walk me through the LaudBot architecture — how does the backend fit together?
+What drove the decision to use an overlay system for mode-specific prompts?
+How does The Rig actually work — what does the agent loop look like?
+What was the trickiest bug you hit in this codebase and how did you debug it?
+What would you do differently if you were starting LaudBot from scratch?
