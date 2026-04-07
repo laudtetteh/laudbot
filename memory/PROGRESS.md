@@ -5,6 +5,22 @@
 
 ---
 
+## 2026-04-06 — refactor: rename recruiter → visitor throughout; absorb session + ordering fixes (PR #75)
+
+- JWT role `"recruiter"` → `"visitor"` in `create_token` and `get_current_visitor` dependency
+- `get_current_recruiter` → `get_current_visitor` in `dependencies.py`; `required_role` check updated
+- `AcceptInviteResponse.recruiter_id` → `visitor_id` in `models/auth.py`
+- `Invitation.recruiter_id` → `visitor_id`, `ChatMessage.recruiter_id` → `visitor_id` in `db/models.py`
+- All route params and logger calls updated to `visitor` / `visitor_id` in `auth.py` and `chat.py`
+- Alembic migration 003 — renames `recruiter_id` → `visitor_id` in `invitations` and `chat_messages` tables
+- Frontend localStorage keys: `recruiter_token` → `visitor_token`, `recruiter_id` → `visitor_id`
+- Absorbs all of PR #73: sessionStorage → localStorage (cross-tab persistence), +1ms timestamp on assistant message (deterministic chat ORDER BY), TL;DR label on expandable responses
+- Buddy overlay final rewrite: ~110 lines, unstructured, comedian anchors, expletive list, "pick one thing and commit" anti-glaze rule
+- System prompt updated: "Lead with the point on long answers" rule added; stale sessionStorage reference fixed
+- PR #73 superseded and closed; PR #75 merged — branch: refactor/visitor-naming
+
+---
+
 ## 2026-04-06 — fix: SSL cert verification for DO managed Postgres (PR #64)
 
 - `ssl=True` in asyncpg uses Python default SSL which verifies the server cert chain
