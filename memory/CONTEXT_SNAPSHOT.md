@@ -14,7 +14,11 @@ LaudBot is fully live and working end-to-end in production. Chat persistence con
 
 ## Merged PRs (all)
 
-#2 repo-init · #4 agentic-system · #6 backend-scaffold · #8 auth-stub · #10 llm-service · #12 frontend-scaffold · #14 pages+nav · #16 docs · #18 real-llm-sdks · #22 chat-endpoint · #24 frontend-chat · #26 system-prompt · #28 admin-llm-toggle · #29 jwt-auth · #32 admin-invite-ui · #34 do-deploy · #36 invite-suspense · #38 public-gitkeep · #40 housekeeping · #42 invite-modes · #44 email-invites · #46 chat-ux · #47 housekeeping · #49 ui-polish-v4 · #51 mobile-header-fix · #52 housekeeping · #53 issue-filed · #54 nextjs-cve · #56 postgres-persistence · #58 secret-scanning · #60 chat-history-frontend · #61 alembic-ssl · #62 history-error-surfacing · #63 db-diagnostics · #64 ssl-cert-fix · #67 expandable-answers · #66 chat-ui-quickwins · #65 system-prompt-editor · #71 dark-mode-palette · #75 visitor-rename · #76 mode-slug-rename
+#2 repo-init · #4 agentic-system · #6 backend-scaffold · #8 auth-stub · #10 llm-service · #12 frontend-scaffold · #14 pages+nav · #16 docs · #18 real-llm-sdks · #22 chat-endpoint · #24 frontend-chat · #26 system-prompt · #28 admin-llm-toggle · #29 jwt-auth · #32 admin-invite-ui · #34 do-deploy · #36 invite-suspense · #38 public-gitkeep · #40 housekeeping · #42 invite-modes · #44 email-invites · #46 chat-ux · #47 housekeeping · #49 ui-polish-v4 · #51 mobile-header-fix · #52 housekeeping · #53 issue-filed · #54 nextjs-cve · #56 postgres-persistence · #58 secret-scanning · #60 chat-history-frontend · #61 alembic-ssl · #62 history-error-surfacing · #63 db-diagnostics · #64 ssl-cert-fix · #67 expandable-answers · #66 chat-ui-quickwins · #65 system-prompt-editor · #71 dark-mode-palette · #75 visitor-rename · #76 mode-slug-rename · #79 admin-invite-history · #81 fix-204-response-model · #83 fix-migration-004-table-name
+
+## Open PRs
+
+#85 chore/buddy-overlay-cleanup — overlay .example files for all three modes
 
 ---
 
@@ -32,27 +36,24 @@ LaudBot is fully live and working end-to-end in production. Chat persistence con
 
 ## Active tasks
 
-None. All PRs merged. Next: `feat/admin-invite-history` — see backlog below.
+None. #85 open (minor chore, ready to merge).
 
 ---
 
 ## Backlog (priority order)
 
-### P0 — Next up
-1. **Admin invite history** — `GET /api/admin/invitations` endpoint + table in admin UI showing email, mode config, accepted_at, visitor_id status. Data already in DB.
-
 ### P1 — UI/UX
-2. Email template redesign — current template too dark; needs light/bright layout
-3. Third theme option (dark/light/system or a colour accent)
+1. Email template redesign — current template too dark; needs light/bright layout
+2. Third theme option (dark/light/system or a colour accent)
 
 ### P2 — Content / Knowledge
-4. Expand knowledge base: Laud's projects in depth, job history timeline, personal trivia, LaudBot build story
-5. System prompt tuning — repetitive answers in long chats
+3. Expand knowledge base: Laud's projects in depth, job history timeline, personal trivia, LaudBot build story
+4. System prompt tuning — repetitive answers in long chats
 
 ### P3 — Features
-6. Chat history list — user-facing browse of past conversations
-7. Rate limiting (required before public deploy)
-8. RAG / source ingestion pipeline (pgvector ready)
+5. Chat history list — user-facing browse of past conversations
+6. Rate limiting (required before public deploy)
+7. RAG / source ingestion pipeline (pgvector ready)
 
 ---
 
@@ -90,8 +91,10 @@ None. All PRs merged. Next: `feat/admin-invite-history` — see backlog below.
 
 - asyncpg SSL: use `ssl.SSLContext` not `ssl=True` for DO managed Postgres
 - `useSearchParams()` needs `<Suspense>` in standalone Next.js
-- `gh` CLI: use `/usr/local/bin/gh` explicitly
+- `gh` CLI: use `/usr/local/Cellar/gh/2.69.0/bin/gh` explicitly (not in PATH)
 - **Worktree**: all edits target `/Users/beaconavenue/code/laudbot/` — never the worktree path
 - PR body with backticks: write to `/tmp/file.md`, pass via `--body-file`
 - `gh pr edit` fails with GraphQL classic projects warning — use `gh api ... --method PATCH` instead
 - Always create a GitHub issue before opening a PR; use project issue/PR templates
+- FastAPI `status_code=204` routes MUST also have `response_model=None` — omitting crashes backend at import
+- Partial failed migrations on local leave DB in inconsistent state — `docker compose down -v && up` to reset

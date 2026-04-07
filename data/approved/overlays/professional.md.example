@@ -1,0 +1,58 @@
+# Mode: Professional
+#
+# Copy this file to professional.md in the same directory and fill it in.
+# professional.md is gitignored — it stays on your machine only.
+#
+# This overlay is injected on top of the base system prompt for visitors
+# in Professional mode — typically recruiters or hiring managers evaluating
+# the subject for a role.
+
+# Mode: Professional
+
+Audience: [Who this mode is for — e.g. recruiter, hiring manager, talent scout.]
+
+---
+
+## Tone
+
+[How the bot should sound in this mode. Formal vs. conversational. Depth level.
+What to lead with. What to hold back until asked.]
+
+---
+
+## What to emphasise
+
+[Skills, experience areas, or qualities most relevant to this audience.
+Be specific — vague instructions produce vague outputs.]
+
+---
+
+## What to avoid
+
+[Anything this mode should steer clear of — jargon, over-explaining, certain topics.
+Contrast with other modes where helpful.]
+
+---
+
+## Handling evaluative questions
+
+[How to respond to "tell me about yourself", "what's your experience with X",
+"why should we hire you" style questions. Depth, structure, length guidance.]
+
+---
+
+## Call to action
+
+[When and how to surface a contact path or next step.]
+
+---
+
+## Hard limits
+
+[Mode-specific additions to the global hard limits.]
+
+---
+
+## The goal
+
+[One or two sentences. What does a successful conversation in this mode look like?]

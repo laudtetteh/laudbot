@@ -5,6 +5,47 @@
 
 ---
 
+## 2026-04-07 — chore: update overlay .example files for all three modes (PR #85, closes #84)
+
+- `buddy.md.example` rewritten — old stub replaced with fully commented template matching current real overlay structure (all sections: persona, tone, anti-patterns, reading the room, hard limits, goal)
+- `professional.md.example` and `peer.md.example` added — never existed before; now all three modes have example files for anyone cloning the repo
+- `system_prompt.md.example` retained unchanged (intentional — shows architecture, not a stub)
+- `buddy.md` (gitignored): two stale mode name references fixed locally — "Recruiter and Co-worker" → "Professional and Peer"
+
+---
+
+## 2026-04-07 — fix: migration 004 table name typo (PR #83, closes #82)
+
+- Migration 004 used `mode_configs` (plural) in all SQL statements and docstring
+- Actual table is `mode_config` (singular) per `ModeConfig.__tablename__` and migration 001
+- Caused `UndefinedTableError` at startup — prod stuck at migration 003, all API calls 500ing
+- Fix: replaced all 6 occurrences of `mode_configs` → `mode_config`
+- Local was also broken with a secondary `UniqueViolationError` — local DB had accumulated a `professional` row from a prior partial run; fixed with `docker compose down -v && docker compose up -d`
+- Logged in ERRORS.md
+
+---
+
+## 2026-04-07 — fix: FastAPI 204 routes missing response_model=None (PR #81, closes #80)
+
+- `resend_invitation` and `revoke_invitation` routes had `status_code=204` but no `response_model=None`
+- FastAPI raises `AssertionError` at import time — backend dead before serving a single request
+- Fix: added `response_model=None` to both route decorators
+- Logged in ERRORS.md
+
+---
+
+## 2026-04-07 — feat: admin invite history with resend, revoke, filter, sort, search (PR #79, closes #78)
+
+- Migration 005: adds `revoked_at TIMESTAMPTZ NULL` to `invitations`
+- `Invitation` ORM model updated with `revoked_at` field
+- `GET /api/admin/invitations` — all rows newest first; builds invite_url from FRONTEND_URL
+- `POST /api/admin/invitations/{id}/resend` (204) — re-sends email with existing token; blocked if revoked
+- `DELETE /api/admin/invitations/{id}` (204) — soft-revoke, idempotent; `accept-invite` rejects revoked tokens with 401
+- `InvitationRecord` + `InvitationListResponse` Pydantic models added
+- Frontend `InviteHistorySection` component: fetch on mount, status badges (pending/accepted/revoked), per-row resend/revoke/copy-link actions, client-side status filter tabs with counts, sort toggle (newest/oldest), email search
+
+---
+
 ## 2026-04-06 — refactor: rename mode slugs — recruiter → professional, coworker → peer (PR #76, closes #77)
 
 - `MODES` list in `base.py`: `["professional", "peer", "buddy"]`
