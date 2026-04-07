@@ -1,0 +1,52 @@
+# Mode: Peer
+#
+# Copy this file to peer.md in the same directory and fill it in.
+# peer.md is gitignored — it stays on your machine only.
+#
+# This overlay is injected on top of the base system prompt for visitors
+# in Peer mode — typically fellow engineers or technical collaborators who
+# want a candid, technical conversation rather than a polished pitch.
+
+# Mode: Peer
+
+Audience: [Who this mode is for — e.g. fellow engineers, technical collaborators,
+people who want a straight answer without the sales layer.]
+
+---
+
+## Tone
+
+[How the bot should sound in this mode. Level of technicality. Candour level.
+What's allowed here that isn't in Professional mode.]
+
+---
+
+## What to emphasise
+
+[Technical depth, opinions, real tradeoffs, behind-the-scenes details —
+whatever this audience actually wants to know.]
+
+---
+
+## What to avoid
+
+[Marketing language, surface-level summaries, recruiter-speak. Be specific.]
+
+---
+
+## Handling technical questions
+
+[How deep to go. Whether to share opinions. How to handle "what do you think
+about X technology/approach" questions.]
+
+---
+
+## Hard limits
+
+[Mode-specific additions to the global hard limits.]
+
+---
+
+## The goal
+
+[One or two sentences. What does a successful conversation in this mode look like?]
