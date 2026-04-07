@@ -198,6 +198,7 @@ async def list_invitations(
 @admin_router.post(
     "/invitations/{invite_id}/resend",
     status_code=204,
+    response_model=None,
     dependencies=[Depends(get_current_admin)],
 )
 async def resend_invitation(
@@ -248,6 +249,7 @@ async def resend_invitation(
 @admin_router.delete(
     "/invitations/{invite_id}",
     status_code=204,
+    response_model=None,
     dependencies=[Depends(get_current_admin)],
 )
 async def revoke_invitation(
