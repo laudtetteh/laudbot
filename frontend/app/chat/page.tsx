@@ -244,7 +244,7 @@ export default function ChatPage() {
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between flex-shrink-0">
           <div>
             <h1 className="text-base font-semibold text-zinc-900 dark:text-white sm:text-lg">Chat</h1>
-            <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500 sm:text-sm">
+            <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-400 sm:text-sm">
               Ask anything about Laud&apos;s background, projects, and experience.
             </p>
           </div>
@@ -253,10 +253,10 @@ export default function ChatPage() {
           <div className="flex flex-col gap-2 sm:items-end">
             {activeMode && (
               <div className="flex flex-row items-center gap-2 sm:flex-col sm:items-end sm:gap-1.5">
-                <p className="text-xs text-zinc-400 dark:text-zinc-600">I am a…</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500">I am a…</p>
 
                 {canSwitchModes && allowedModes.length > 1 ? (
-                  <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-zinc-800 dark:bg-zinc-900">
+                  <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-zinc-700 dark:bg-zinc-800">
                     {allowedModes.map((mode) => (
                       <button
                         key={mode}
@@ -283,7 +283,7 @@ export default function ChatPage() {
               {messages.length > 0 && (
                 <button
                   onClick={handleNewConversation}
-                  className="text-xs text-zinc-400 transition-colors hover:text-zinc-700 dark:text-zinc-600 dark:hover:text-zinc-400"
+                  className="text-xs text-zinc-400 transition-colors hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300"
                 >
                   + New Chat
                 </button>
@@ -300,7 +300,7 @@ export default function ChatPage() {
 
         {/* Mode switch confirmation */}
         {switchConfirm && (
-          <div className="animate-slide-down mb-3 flex-shrink-0 rounded-xl border border-zinc-200/70 bg-zinc-50 px-4 py-4 dark:border-zinc-700/60 dark:bg-zinc-900">
+          <div className="animate-slide-down mb-3 flex-shrink-0 rounded-xl border border-zinc-200/70 bg-zinc-50 px-4 py-4 dark:border-zinc-700/60 dark:bg-zinc-800">
             <p className="mb-1 text-sm font-medium text-zinc-900 dark:text-white">
               Switch to {MODE_LABELS[switchConfirm] ?? switchConfirm} mode?
             </p>
@@ -309,7 +309,7 @@ export default function ChatPage() {
                 {MODE_DESCRIPTIONS[switchConfirm]}
               </p>
             )}
-            <p className="mb-3 text-xs text-zinc-400 dark:text-zinc-600">
+            <p className="mb-3 text-xs text-zinc-400 dark:text-zinc-500">
               This will start a new conversation.
             </p>
             <div className="flex gap-3">
@@ -330,12 +330,12 @@ export default function ChatPage() {
         )}
 
         {/* Message area — fills remaining space; dimmed when mode-switch dialog is open */}
-        <div className={`messages-scroll mb-3 flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto rounded-xl border border-zinc-200/60 bg-zinc-50/50 p-4 transition-opacity duration-200 dark:border-zinc-800/60 dark:bg-zinc-900/50 ${switchConfirm ? "pointer-events-none opacity-30" : ""}`}>
+        <div className={`messages-scroll mb-3 flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto rounded-xl border border-zinc-200/60 bg-zinc-50/50 p-4 transition-opacity duration-200 dark:border-zinc-700/60 dark:bg-zinc-800/50 ${switchConfirm ? "pointer-events-none opacity-30" : ""}`}>
 
           {/* History loading indicator */}
           {historyLoading && (
             <div className="flex flex-1 items-center justify-center">
-              <p className="animate-pulse text-xs text-zinc-300 dark:text-zinc-700">Loading history…</p>
+              <p className="animate-pulse text-xs text-zinc-300 dark:text-zinc-600">Loading history…</p>
             </div>
           )}
 
@@ -363,7 +363,7 @@ export default function ChatPage() {
                     : "Welcome"}
                 </p>
                 {activeMode && MODE_DESCRIPTIONS[activeMode] && (
-                  <p className="text-xs text-zinc-400 dark:text-zinc-600">
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500">
                     {MODE_DESCRIPTIONS[activeMode]}
                   </p>
                 )}
@@ -384,7 +384,7 @@ export default function ChatPage() {
               )}
 
               {suggestedPrompts.length === 0 && (
-                <p className="animate-fade-in text-xs text-zinc-300 dark:text-zinc-700">Ask me anything.</p>
+                <p className="animate-fade-in text-xs text-zinc-300 dark:text-zinc-600">Ask me anything.</p>
               )}
             </div>
           )}
@@ -444,7 +444,7 @@ export default function ChatPage() {
               })()}
 
               {msg.role === "assistant" && msg.provider && (
-                <span className="ml-1 text-xs text-zinc-400 dark:text-zinc-600">
+                <span className="ml-1 text-xs text-zinc-400 dark:text-zinc-500">
                   {msg.provider} · {msg.model}
                 </span>
               )}
@@ -482,7 +482,7 @@ export default function ChatPage() {
             onKeyDown={handleKeyDown}
             placeholder="Ask something…"
             disabled={loading || !!switchConfirm}
-            className="flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 disabled:text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-white dark:placeholder-zinc-600 dark:focus:border-zinc-600 dark:disabled:text-zinc-500"
+            className="flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 disabled:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-600 dark:focus:border-zinc-600 dark:disabled:text-zinc-500"
           />
           <button
             onClick={() => sendMessage()}

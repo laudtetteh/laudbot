@@ -76,7 +76,7 @@ function InviteFlow() {
     <div className="flex flex-1 items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm animate-fade-in-up text-center">
         {state === "loading" && (
-          <div className="rounded-xl border border-zinc-200/70 bg-zinc-50/80 px-8 py-10 dark:border-zinc-800/70 dark:bg-zinc-900/60">
+          <div className="rounded-xl border border-zinc-200/70 bg-zinc-50/80 px-8 py-10 dark:border-zinc-700/70 dark:bg-zinc-800/60">
             {/* Spinner */}
             <div className="mx-auto mb-5 h-8 w-8 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-600 dark:border-zinc-700 dark:border-t-zinc-300" />
             <p className="mb-1 text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -87,7 +87,7 @@ function InviteFlow() {
         )}
 
         {state === "error" && (
-          <div className="rounded-xl border border-zinc-200/70 bg-zinc-50/80 px-8 py-10 dark:border-zinc-800/70 dark:bg-zinc-900/60">
+          <div className="rounded-xl border border-zinc-200/70 bg-zinc-50/80 px-8 py-10 dark:border-zinc-700/70 dark:bg-zinc-800/60">
             <div className="mx-auto mb-5 flex h-10 w-10 items-center justify-center rounded-full border border-red-200/60 bg-red-50/60 text-lg text-red-500 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-400">
               ✕
             </div>
@@ -102,7 +102,7 @@ function InviteFlow() {
         )}
 
         {state === "done" && (
-          <div className="rounded-xl border border-zinc-200/70 bg-zinc-50/80 px-8 py-10 dark:border-zinc-800/70 dark:bg-zinc-900/60">
+          <div className="rounded-xl border border-zinc-200/70 bg-zinc-50/80 px-8 py-10 dark:border-zinc-700/70 dark:bg-zinc-800/60">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Redirecting to chat…</p>
           </div>
         )}

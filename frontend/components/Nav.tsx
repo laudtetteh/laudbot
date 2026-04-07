@@ -16,7 +16,7 @@ export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-zinc-200/60 bg-white/80 px-6 py-4 backdrop-blur-md dark:border-zinc-800/60 dark:bg-zinc-950/80">
+    <nav className="sticky top-0 z-50 border-b border-zinc-200/60 bg-white/80 px-6 py-4 backdrop-blur-md dark:border-zinc-700/60 dark:bg-zinc-950/80">
       <div className="mx-auto flex max-w-4xl items-center justify-between">
         <Link
           href="/"
@@ -73,7 +73,7 @@ export default function Nav() {
 
       {/* Mobile menu dropdown */}
       {menuOpen && (
-        <div className="animate-slide-down border-t border-zinc-200/60 pb-2 pt-3 dark:border-zinc-800/60 sm:hidden">
+        <div className="animate-slide-down border-t border-zinc-200/60 pb-2 pt-3 dark:border-zinc-700/60 sm:hidden">
           <ul className="mx-auto flex max-w-4xl flex-col gap-1">
             {links.map(({ href, label }) => {
               const active =
@@ -85,8 +85,8 @@ export default function Nav() {
                     onClick={() => setMenuOpen(false)}
                     className={`block rounded-md px-3 py-2 text-sm transition-colors ${
                       active
-                        ? "bg-zinc-100 font-medium text-zinc-900 dark:bg-zinc-800 dark:text-white"
-                        : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-white"
+                        ? "bg-zinc-100 font-medium text-zinc-900 dark:bg-zinc-700 dark:text-white"
+                        : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
                     }`}
                   >
                     {label}

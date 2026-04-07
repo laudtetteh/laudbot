@@ -15,8 +15,8 @@ body {
 }
 
 .dark {
-  --typing-dot-color: theme("colors.zinc.500");
-  --scrollbar-color: theme("colors.zinc.700");
+  --typing-dot-color: theme("colors.zinc.400");
+  --scrollbar-color: theme("colors.zinc.600");
 }
 
 /* Typing indicator dots */

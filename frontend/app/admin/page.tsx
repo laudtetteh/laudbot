@@ -49,7 +49,7 @@ function SectionHeader({ title, description }: { title: string; description?: st
 /** Consistent card wrapper */
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-zinc-200/70 bg-zinc-50/80 p-5 dark:border-zinc-800/70 dark:bg-zinc-900/60 sm:p-6 ${className}`}>
+    <div className={`rounded-xl border border-zinc-200/70 bg-zinc-50/80 p-5 dark:border-zinc-700/70 dark:bg-zinc-800/60 sm:p-6 ${className}`}>
       {children}
     </div>
   );
@@ -337,7 +337,7 @@ function InviteSection({
             <div>
               <label className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Note{" "}
-                <span className="font-normal text-zinc-400 dark:text-zinc-600">(optional)</span>
+                <span className="font-normal text-zinc-400 dark:text-zinc-500">(optional)</span>
               </label>
               <input
                 type="text"
@@ -366,7 +366,7 @@ function InviteSection({
                       key={mode}
                       className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-all ${
                         !isEnabled
-                          ? "cursor-not-allowed border-zinc-200/60 text-zinc-400 dark:border-zinc-800/60 dark:text-zinc-600"
+                          ? "cursor-not-allowed border-zinc-200/60 text-zinc-400 dark:border-zinc-700/60 dark:text-zinc-500"
                           : isLocked
                           ? "cursor-default border-zinc-400 bg-zinc-100 text-zinc-700 shadow-sm dark:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-200"
                           : isChecked
@@ -383,7 +383,7 @@ function InviteSection({
                       />
                       {MODE_LABELS[mode]}
                       {!isEnabled && (
-                        <span className="text-zinc-400 dark:text-zinc-700">(disabled)</span>
+                        <span className="text-zinc-400 dark:text-zinc-600">(disabled)</span>
                       )}
                     </label>
                   );
@@ -430,7 +430,7 @@ function InviteSection({
               </div>
               <span className="text-xs text-zinc-500 dark:text-zinc-400">
                 Allow recipient to switch modes
-                <span className="ml-1 text-zinc-400 dark:text-zinc-600">
+                <span className="ml-1 text-zinc-400 dark:text-zinc-500">
                   (starts a new conversation each time)
                 </span>
               </span>
@@ -517,7 +517,7 @@ function GlobalModesSection({
 
       <Card>
         {modesConfig ? (
-          <div className="divide-y divide-zinc-200/60 dark:divide-zinc-800/60">
+          <div className="divide-y divide-zinc-200/60 dark:divide-zinc-700/60">
             {ALL_MODES.map((mode) => (
               <div key={mode} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                 <span className="text-sm text-zinc-700 dark:text-zinc-300">{MODE_LABELS[mode]}</span>
@@ -546,7 +546,7 @@ function GlobalModesSection({
             )}
           </div>
         ) : (
-          <p className="text-xs text-zinc-400 dark:text-zinc-600">Loading…</p>
+          <p className="text-xs text-zinc-400 dark:text-zinc-500">Loading…</p>
         )}
       </Card>
     </section>
@@ -685,7 +685,7 @@ function OverlayEditorSection({
                 {MODE_LABELS[mode].split(" (")[0]}
               </span>
             ))}
-            <span className="ml-auto text-xs text-zinc-400 dark:text-zinc-600">{ALL_MODES.length} modes</span>
+            <span className="ml-auto text-xs text-zinc-400 dark:text-zinc-500">{ALL_MODES.length} modes</span>
           </div>
         </Card>
       )}
@@ -694,7 +694,7 @@ function OverlayEditorSection({
       {isUnlocked && (
         <Card className="p-0 overflow-hidden">
           {/* Mode tabs */}
-          <div className="flex overflow-x-auto border-b border-zinc-200/70 dark:border-zinc-800/70">
+          <div className="flex overflow-x-auto border-b border-zinc-200/70 dark:border-zinc-700/70">
             {ALL_MODES.map((mode) => (
               <button
                 key={mode}
@@ -716,7 +716,7 @@ function OverlayEditorSection({
               <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 System prompt overlay
               </label>
-              <p className="mb-2 text-xs text-zinc-400 dark:text-zinc-600">
+              <p className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
                 Appended to the base system prompt when this mode is active. Leave blank to use only the base.
               </p>
               <textarea
@@ -750,7 +750,7 @@ function OverlayEditorSection({
               <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Suggested prompts
               </label>
-              <p className="mb-2 text-xs text-zinc-400 dark:text-zinc-600">
+              <p className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
                 One prompt per line. Shown as clickable chips in the chat empty state for this mode.
               </p>
               <textarea
@@ -919,7 +919,7 @@ function LLMProviderSection({
               </select>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-200/60 pt-4 dark:border-zinc-800/60">
+            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-200/60 pt-4 dark:border-zinc-700/60">
               <button
                 onClick={handleSave}
                 disabled={saveState === "saving" || !isDirty}
@@ -1073,7 +1073,7 @@ function SystemPromptSection({
             </span>
             <span className="text-xs text-zinc-400 dark:text-zinc-500">{content.length.toLocaleString()} chars</span>
             {data.updated_at && (
-              <span className="text-xs text-zinc-400 dark:text-zinc-600">
+              <span className="text-xs text-zinc-400 dark:text-zinc-500">
                 Last saved {new Date(data.updated_at).toLocaleString()}
               </span>
             )}
@@ -1102,7 +1102,7 @@ function SystemPromptSection({
                 </span>
               )}
               {data.updated_at && (
-                <span className="ml-auto text-xs text-zinc-400 dark:text-zinc-600">
+                <span className="ml-auto text-xs text-zinc-400 dark:text-zinc-500">
                   Last saved {new Date(data.updated_at).toLocaleString()}
                 </span>
               )}
@@ -1120,8 +1120,8 @@ function SystemPromptSection({
               className="w-full resize-y rounded-lg border border-zinc-300/60 bg-white px-4 py-3 font-mono text-xs leading-relaxed text-zinc-800 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-zinc-200 dark:focus:border-zinc-500"
             />
 
-            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-200/60 pt-4 dark:border-zinc-800/60">
-              <span className="text-xs text-zinc-400 dark:text-zinc-600">
+            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-200/60 pt-4 dark:border-zinc-700/60">
+              <span className="text-xs text-zinc-400 dark:text-zinc-500">
                 {content.length.toLocaleString()} chars
               </span>
               <div className="ml-auto flex items-center gap-4">
@@ -1209,7 +1209,7 @@ function AdminControls({ token, onLogout }: { token: string; onLogout: () => voi
           ].map(({ title, description }) => (
             <Card key={title}>
               <h3 className="mb-1.5 text-sm font-medium text-zinc-400 dark:text-zinc-500">{title}</h3>
-              <p className="text-xs leading-relaxed text-zinc-400 dark:text-zinc-600">{description}</p>
+              <p className="text-xs leading-relaxed text-zinc-400 dark:text-zinc-500">{description}</p>
             </Card>
           ))}
         </div>
