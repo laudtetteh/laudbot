@@ -351,7 +351,7 @@ async def accept_invite(
             "default_mode": invitation.default_mode,
             "can_switch_modes": invitation.can_switch_modes,
         },
-        expire_hours=7 * 24,
+        expire_hours=float(os.environ.get("VISITOR_JWT_EXPIRE_HOURS", str(7 * 24))),
     )
 
     return AcceptInviteResponse(
