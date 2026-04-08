@@ -401,8 +401,8 @@ export default function ChatPage() {
                 aria-label="Toggle history"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="8" cy="8" r="6.25" />
-                  <path d="M8 4.5V8L10.5 10" />
+                  <rect x="1.75" y="2.75" width="12.5" height="10.5" rx="1.25" />
+                  <line x1="5.25" y1="2.75" x2="5.25" y2="13.25" />
                 </svg>
               </button>
               <div>
@@ -414,7 +414,7 @@ export default function ChatPage() {
             </div>
 
             {/* Mode selector + actions — single row on mobile, stacked on desktop */}
-            <div className="flex flex-row items-center gap-2 sm:flex-col sm:items-end sm:gap-2">
+            <div className="flex w-full flex-row items-center gap-2 sm:w-auto sm:flex-col sm:items-end sm:gap-2">
               {activeMode && (
                 <div className="flex flex-row items-center gap-2 sm:flex-col sm:items-end sm:gap-1.5">
                   {/* "I am a…" label — hidden on mobile to save space */}
@@ -443,19 +443,14 @@ export default function ChatPage() {
                 </div>
               )}
 
-              {/* Action buttons — icon-only on mobile, text on desktop */}
-              <div className="flex items-center gap-1.5 sm:gap-2 sm:self-end">
+              {/* Action buttons — pushed to the right of the row on mobile */}
+              <div className="ml-auto flex items-center gap-1.5 sm:ml-0 sm:gap-2 sm:self-end">
                 {messages.length > 0 && (
                   <button
                     onClick={handleNewConversation}
-                    aria-label="New conversation"
-                    className="flex items-center rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300 sm:p-0 sm:hover:bg-transparent sm:dark:hover:bg-transparent"
+                    className="text-xs text-zinc-400 transition-colors hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300"
                   >
-                    {/* Pencil icon — mobile */}
-                    <svg className="sm:hidden" width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M10.5 1.5L13.5 4.5L5 13H2V10L10.5 1.5Z" />
-                    </svg>
-                    <span className="hidden sm:inline text-xs">+ New Chat</span>
+                    + New Chat
                   </button>
                 )}
                 <button
@@ -463,7 +458,7 @@ export default function ChatPage() {
                   aria-label="Exit"
                   className="flex items-center rounded-md border border-zinc-200 p-1.5 text-zinc-400 transition-colors hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-800 dark:text-zinc-500 dark:hover:border-zinc-600 dark:hover:text-zinc-300 sm:px-3 sm:py-1"
                 >
-                  {/* Exit-door icon — mobile */}
+                  {/* Exit-door icon on mobile, text on desktop */}
                   <svg className="sm:hidden" width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5.5 3H2.5V12H5.5" />
                     <path d="M9 10.5L12.5 7.5L9 4.5" />
