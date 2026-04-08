@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 logger = logging.getLogger(__name__)
 
 from app.core.dependencies import get_current_visitor, get_db
+from app.core.limiter import RATE_LIMIT_CHAT, limiter
 from app.db.models import ChatMessage, ModeConfig
 from app.models.chat import ChatRequest, ChatResponse
 from app.services.llm.base import LLMConfig
@@ -220,6 +221,7 @@ async def get_chat_history(
 
 
 @router.post("/chat", response_model=ChatResponse)
+@limiter.limit(RATE_LIMIT_CHAT)
 async def chat(
     body: ChatRequest,
     request: Request,
