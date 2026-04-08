@@ -322,12 +322,24 @@ export default function ChatPage() {
           <span className="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
             History
           </span>
-          <button
-            onClick={handleNewConversation}
-            className="rounded-md px-2 py-1 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-          >
-            + New
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleNewConversation}
+              className="rounded-md px-2 py-1 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+            >
+              + New
+            </button>
+            {/* Close button — mobile only */}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="sm:hidden rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+              aria-label="Close history"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M2 2L12 12M12 2L2 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto">
@@ -382,16 +394,15 @@ export default function ChatPage() {
           {/* Header row */}
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
-              {/* Mobile sidebar toggle */}
+              {/* Mobile sidebar toggle — clock icon, distinct from the nav hamburger */}
               <button
                 onClick={() => setSidebarOpen((v) => !v)}
                 className="sm:hidden rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800"
                 aria-label="Toggle history"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <rect y="2" width="16" height="1.5" rx="1" />
-                  <rect y="7.25" width="16" height="1.5" rx="1" />
-                  <rect y="12.5" width="16" height="1.5" rx="1" />
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="8" cy="8" r="6.25" />
+                  <path d="M8 4.5V8L10.5 10" />
                 </svg>
               </button>
               <div>
@@ -402,11 +413,12 @@ export default function ChatPage() {
               </div>
             </div>
 
-            {/* Mode selector + actions */}
-            <div className="flex flex-col gap-2 sm:items-end">
+            {/* Mode selector + actions — single row on mobile, stacked on desktop */}
+            <div className="flex flex-row items-center gap-2 sm:flex-col sm:items-end sm:gap-2">
               {activeMode && (
                 <div className="flex flex-row items-center gap-2 sm:flex-col sm:items-end sm:gap-1.5">
-                  <p className="text-xs text-zinc-400 dark:text-zinc-500">I am a…</p>
+                  {/* "I am a…" label — hidden on mobile to save space */}
+                  <p className="hidden sm:block text-xs text-zinc-400 dark:text-zinc-500">I am a…</p>
                   {canSwitchModes && allowedModes.length > 1 ? (
                     <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-zinc-700 dark:bg-zinc-800">
                       {allowedModes.map((mode) => (
@@ -431,20 +443,33 @@ export default function ChatPage() {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 sm:self-end">
+              {/* Action buttons — icon-only on mobile, text on desktop */}
+              <div className="flex items-center gap-1.5 sm:gap-2 sm:self-end">
                 {messages.length > 0 && (
                   <button
                     onClick={handleNewConversation}
-                    className="text-xs text-zinc-400 transition-colors hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300"
+                    aria-label="New conversation"
+                    className="flex items-center rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300 sm:p-0 sm:hover:bg-transparent sm:dark:hover:bg-transparent"
                   >
-                    + New Chat
+                    {/* Pencil icon — mobile */}
+                    <svg className="sm:hidden" width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10.5 1.5L13.5 4.5L5 13H2V10L10.5 1.5Z" />
+                    </svg>
+                    <span className="hidden sm:inline text-xs">+ New Chat</span>
                   </button>
                 )}
                 <button
                   onClick={handleLogout}
-                  className="rounded-md border border-zinc-200 px-3 py-1 text-xs text-zinc-400 transition-colors hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-800 dark:text-zinc-500 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+                  aria-label="Exit"
+                  className="flex items-center rounded-md border border-zinc-200 p-1.5 text-zinc-400 transition-colors hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-800 dark:text-zinc-500 dark:hover:border-zinc-600 dark:hover:text-zinc-300 sm:px-3 sm:py-1"
                 >
-                  Exit
+                  {/* Exit-door icon — mobile */}
+                  <svg className="sm:hidden" width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5.5 3H2.5V12H5.5" />
+                    <path d="M9 10.5L12.5 7.5L9 4.5" />
+                    <path d="M5.5 7.5H12.5" />
+                  </svg>
+                  <span className="hidden sm:inline text-xs">Exit</span>
                 </button>
               </div>
             </div>
