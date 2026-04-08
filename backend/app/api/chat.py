@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 logger = logging.getLogger(__name__)
 
 from app.core.dependencies import get_current_visitor, get_db
-from app.core.limiter import RATE_LIMIT_CHAT, limiter
+from app.core.limiter import chat_rate_limit
 from app.db.models import ChatMessage, ModeConfig
 from app.models.chat import ChatRequest, ChatResponse
 from app.services.llm.base import LLMConfig
@@ -221,12 +221,12 @@ async def get_chat_history(
 
 
 @router.post("/chat", response_model=ChatResponse)
-@limiter.limit(RATE_LIMIT_CHAT)
 async def chat(
     body: ChatRequest,
     request: Request,
     visitor: dict = Depends(get_current_visitor),
     db: AsyncSession = Depends(get_db),
+    _: None = Depends(chat_rate_limit),
 ) -> ChatResponse:
     """Route a user message through the active LLM and persist both turns.
 
