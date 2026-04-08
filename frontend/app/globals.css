@@ -3,7 +3,11 @@
 @tailwind utilities;
 
 /* Full-height layout support for the chat page */
-html,
+html {
+  font-size: 17px;
+  height: 100%;
+}
+
 body {
   height: 100%;
 }

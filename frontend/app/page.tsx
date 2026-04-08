@@ -21,7 +21,7 @@ export default function Home() {
       />
 
       <div className="relative mx-auto w-full max-w-4xl">
-        <p className="animate-fade-in mb-5 text-xs font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+        <p className="animate-fade-in mb-5 text-xs font-medium uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
           Private · Invite-only
         </p>
 
@@ -53,7 +53,7 @@ export default function Home() {
           >
             Start a conversation →
           </Link>
-          <p className="text-xs text-zinc-400 dark:text-zinc-600">
+          <p className="text-xs text-zinc-500 dark:text-zinc-500">
             You&apos;ll need an invite link to access the chat.
           </p>
         </div>

@@ -58,7 +58,7 @@ function SectionHeader({ title, description }: { title: string; description?: st
     <div className="mb-5">
       <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{title}</h2>
       {description && (
-        <p className="mt-1 text-xs leading-relaxed text-zinc-500 dark:text-zinc-500">{description}</p>
+        <p className="mt-1 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">{description}</p>
       )}
     </div>
   );
@@ -67,7 +67,7 @@ function SectionHeader({ title, description }: { title: string; description?: st
 /** Consistent card wrapper */
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-zinc-200/70 bg-zinc-50/80 p-5 dark:border-zinc-700/70 dark:bg-zinc-800/60 sm:p-6 ${className}`}>
+    <div className={`rounded-xl border border-zinc-200 bg-zinc-50/80 p-5 dark:border-zinc-700 dark:bg-zinc-800/60 sm:p-6 ${className}`}>
       {children}
     </div>
   );
@@ -114,7 +114,7 @@ function LoginForm({ onSuccess }: { onSuccess: (token: string) => void }) {
     <div className="flex flex-1 items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm animate-fade-in-up">
         <h1 className="mb-1 text-xl font-semibold text-zinc-900 dark:text-white">Admin login</h1>
-        <p className="mb-8 text-sm text-zinc-500 dark:text-zinc-500">
+        <p className="mb-8 text-sm text-zinc-500 dark:text-zinc-400">
           Owner-only access. Enter your credentials to continue.
         </p>
 
@@ -130,7 +130,7 @@ function LoginForm({ onSuccess }: { onSuccess: (token: string) => void }) {
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
                 required
-                className="w-full rounded-lg border border-zinc-300/60 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-600 dark:focus:border-zinc-500"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-500 dark:focus:border-zinc-400"
               />
             </div>
 
@@ -144,12 +144,12 @@ function LoginForm({ onSuccess }: { onSuccess: (token: string) => void }) {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
-                className="w-full rounded-lg border border-zinc-300/60 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-600 dark:focus:border-zinc-500"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-500 dark:focus:border-zinc-400"
               />
             </div>
 
             {error && (
-              <p className="rounded-lg border border-red-200/60 bg-red-50/60 px-3 py-2 text-xs text-red-600 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-400">
+              <p className="rounded-lg border border-red-200 bg-red-50/60 px-3 py-2 text-xs text-red-600 dark:border-red-900 dark:bg-red-950/60 dark:text-red-400">
                 {error}
               </p>
             )}
@@ -316,7 +316,7 @@ function InviteSection({
                 type="text"
                 readOnly
                 value={result.invite_url}
-                className="flex-1 rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-2 text-xs text-zinc-600 outline-none dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-zinc-300"
+                className="flex-1 rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-2 text-xs text-zinc-600 outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
               />
               <button
                 onClick={handleCopy}
@@ -328,7 +328,7 @@ function InviteSection({
 
             <button
               onClick={handleReset}
-              className="text-xs text-zinc-400 transition-colors hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300"
+              className="text-xs text-zinc-500 transition-colors hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
             >
               ← Generate another
             </button>
@@ -347,7 +347,7 @@ function InviteSection({
                 placeholder="visitor@company.com"
                 required
                 disabled={inviteState === "generating"}
-                className="w-full rounded-lg border border-zinc-300/60 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-600 dark:focus:border-zinc-500 sm:max-w-sm"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-500 dark:focus:border-zinc-400 sm:max-w-sm"
               />
             </div>
 
@@ -363,7 +363,7 @@ function InviteSection({
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="e.g. Acme Corp — senior eng role"
                 disabled={inviteState === "generating"}
-                className="w-full rounded-lg border border-zinc-300/60 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-600 dark:focus:border-zinc-500 sm:max-w-sm"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white dark:placeholder-zinc-500 dark:focus:border-zinc-400 sm:max-w-sm"
               />
             </div>
 
@@ -384,12 +384,12 @@ function InviteSection({
                       key={mode}
                       className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-all ${
                         !isEnabled
-                          ? "cursor-not-allowed border-zinc-200/60 text-zinc-400 dark:border-zinc-700/60 dark:text-zinc-500"
+                          ? "cursor-not-allowed border-zinc-200 text-zinc-400 dark:border-zinc-700 dark:text-zinc-500"
                           : isLocked
                           ? "cursor-default border-zinc-400 bg-zinc-100 text-zinc-700 shadow-sm dark:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-200"
                           : isChecked
                           ? "cursor-pointer border-zinc-400 bg-zinc-100 text-zinc-700 shadow-sm dark:border-zinc-500 dark:bg-zinc-800 dark:text-zinc-200"
-                          : "cursor-pointer border-zinc-200/60 text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-700/60 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+                          : "cursor-pointer border-zinc-200 text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-600 dark:text-zinc-300 dark:hover:border-zinc-400 dark:hover:text-zinc-100"
                       }`}
                     >
                       <input
@@ -419,7 +419,7 @@ function InviteSection({
                 onChange={(e) => setDefaultMode(e.target.value as Mode)}
                 required
                 disabled={allowedModes.length === 0 || allowedModes.length === 1 || inviteState === "generating"}
-                className="rounded-lg border border-zinc-300/60 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:focus:border-zinc-500"
+                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white dark:focus:border-zinc-400"
               >
                 <option value="" disabled>
                   Select default…
@@ -448,7 +448,7 @@ function InviteSection({
               </div>
               <span className="text-xs text-zinc-500 dark:text-zinc-400">
                 Allow recipient to switch modes
-                <span className="ml-1 text-zinc-400 dark:text-zinc-500">
+                <span className="ml-1 text-zinc-500 dark:text-zinc-400">
                   (starts a new conversation each time)
                 </span>
               </span>
@@ -535,7 +535,7 @@ function GlobalModesSection({
 
       <Card>
         {modesConfig ? (
-          <div className="divide-y divide-zinc-200/60 dark:divide-zinc-700/60">
+          <div className="divide-y divide-zinc-200 dark:divide-zinc-700">
             {ALL_MODES.map((mode) => (
               <div key={mode} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                 <span className="text-sm text-zinc-700 dark:text-zinc-300">{MODE_LABELS[mode]}</span>
@@ -552,7 +552,7 @@ function GlobalModesSection({
                       }`}
                     />
                   </div>
-                  <span className="w-6 text-xs text-zinc-400 dark:text-zinc-500">
+                  <span className="w-6 text-xs text-zinc-500 dark:text-zinc-400">
                     {modesConfig[mode] ? "On" : "Off"}
                   </span>
                 </label>
@@ -564,7 +564,7 @@ function GlobalModesSection({
             )}
           </div>
         ) : (
-          <p className="text-xs text-zinc-400 dark:text-zinc-500">Loading…</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">Loading…</p>
         )}
       </Card>
     </section>
@@ -703,7 +703,7 @@ function OverlayEditorSection({
                 {MODE_LABELS[mode].split(" (")[0]}
               </span>
             ))}
-            <span className="ml-auto text-xs text-zinc-400 dark:text-zinc-500">{ALL_MODES.length} modes</span>
+            <span className="ml-auto text-xs text-zinc-500 dark:text-zinc-400">{ALL_MODES.length} modes</span>
           </div>
         </Card>
       )}
@@ -712,7 +712,7 @@ function OverlayEditorSection({
       {isUnlocked && (
         <Card className="p-0 overflow-hidden">
           {/* Mode tabs */}
-          <div className="flex overflow-x-auto border-b border-zinc-200/70 dark:border-zinc-700/70">
+          <div className="flex overflow-x-auto border-b border-zinc-200 dark:border-zinc-700">
             {ALL_MODES.map((mode) => (
               <button
                 key={mode}
@@ -720,7 +720,7 @@ function OverlayEditorSection({
                 className={`whitespace-nowrap px-4 py-3 text-xs font-medium transition-colors ${
                   activeTab === mode
                     ? "border-b-2 border-zinc-700 text-zinc-800 dark:border-zinc-300 dark:text-zinc-200"
-                    : "text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300"
+                    : "text-zinc-600 hover:text-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100"
                 }`}
               >
                 {MODE_LABELS[mode]}
@@ -734,7 +734,7 @@ function OverlayEditorSection({
               <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 System prompt overlay
               </label>
-              <p className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
+              <p className="mb-2 text-xs text-zinc-500 dark:text-zinc-400">
                 Appended to the base system prompt when this mode is active. Leave blank to use only the base.
               </p>
               <textarea
@@ -744,7 +744,7 @@ function OverlayEditorSection({
                 }
                 placeholder={`Overlay instructions for ${MODE_LABELS[activeTab]} mode…`}
                 rows={7}
-                className="w-full rounded-lg border border-zinc-300/60 bg-white px-3 py-2.5 font-mono text-sm text-zinc-800 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-600 dark:focus:border-zinc-500"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 font-mono text-sm text-zinc-800 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500 dark:focus:border-zinc-400"
               />
               <div className="mt-2 flex items-center gap-3">
                 <button
@@ -768,7 +768,7 @@ function OverlayEditorSection({
               <label className="mb-1 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Suggested prompts
               </label>
-              <p className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
+              <p className="mb-2 text-xs text-zinc-500 dark:text-zinc-400">
                 One prompt per line. Shown as clickable chips in the chat empty state for this mode.
               </p>
               <textarea
@@ -778,7 +778,7 @@ function OverlayEditorSection({
                 }
                 placeholder={PROMPT_PLACEHOLDERS[activeTab]}
                 rows={4}
-                className="w-full rounded-lg border border-zinc-300/60 bg-white px-3 py-2.5 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-600 dark:focus:border-zinc-500"
+                className="w-full rounded-lg border border-zinc-300/60 bg-white px-3 py-2.5 text-sm text-zinc-800 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500 dark:focus:border-zinc-400"
               />
               <div className="mt-2 flex items-center gap-3">
                 <button
@@ -888,7 +888,7 @@ function LLMProviderSection({
       />
 
       {loadError && (
-        <div className="mb-4 rounded-xl border border-red-200/60 bg-red-50/60 px-4 py-3 text-sm text-red-600 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-400">
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50/60 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/60 dark:text-red-400">
           {loadError}
         </div>
       )}
@@ -908,7 +908,7 @@ function LLMProviderSection({
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
                       selectedProvider === provider
                         ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-100 dark:text-zinc-900"
-                        : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
+                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:text-zinc-100"
                     }`}
                   >
                     {provider === "claude" ? "Claude (Anthropic)" : "OpenAI"}
@@ -927,7 +927,7 @@ function LLMProviderSection({
                   setSelectedModel(e.target.value);
                   setSaveState("idle");
                 }}
-                className="rounded-lg border border-zinc-300/60 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-white dark:focus:border-zinc-500"
+                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white dark:focus:border-zinc-400"
               >
                 {availableModels.map((model) => (
                   <option key={model} value={model}>
@@ -937,7 +937,7 @@ function LLMProviderSection({
               </select>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-200/60 pt-4 dark:border-zinc-700/60">
+            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-200 pt-4 dark:border-zinc-700">
               <button
                 onClick={handleSave}
                 disabled={saveState === "saving" || !isDirty}
@@ -1071,7 +1071,7 @@ function SystemPromptSection({
       </div>
 
       {loadError && (
-        <div className="mb-4 rounded-xl border border-red-200/60 bg-red-50/60 px-4 py-3 text-sm text-red-600 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-400">
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50/60 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/60 dark:text-red-400">
           {loadError}
         </div>
       )}
@@ -1089,9 +1089,9 @@ function SystemPromptSection({
             >
               {data.source === "database" ? "● Database" : "⚠ " + data.source.replace("_", " ")}
             </span>
-            <span className="text-xs text-zinc-400 dark:text-zinc-500">{content.length.toLocaleString()} chars</span>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">{content.length.toLocaleString()} chars</span>
             {data.updated_at && (
-              <span className="text-xs text-zinc-400 dark:text-zinc-500">
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
                 Last saved {new Date(data.updated_at).toLocaleString()}
               </span>
             )}
@@ -1115,12 +1115,12 @@ function SystemPromptSection({
                 {data.source === "database" ? "● Database" : "⚠ " + data.source.replace("_", " ")}
               </span>
               {data.source !== "database" && (
-                <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                <span className="text-xs text-zinc-500 dark:text-zinc-400">
                   {SOURCE_LABELS[data.source]}
                 </span>
               )}
               {data.updated_at && (
-                <span className="ml-auto text-xs text-zinc-400 dark:text-zinc-500">
+                <span className="ml-auto text-xs text-zinc-500 dark:text-zinc-400">
                   Last saved {new Date(data.updated_at).toLocaleString()}
                 </span>
               )}
@@ -1135,11 +1135,11 @@ function SystemPromptSection({
               }}
               rows={20}
               spellCheck={false}
-              className="w-full resize-y rounded-lg border border-zinc-300/60 bg-white px-4 py-3 font-mono text-xs leading-relaxed text-zinc-800 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/60 dark:bg-zinc-800 dark:text-zinc-200 dark:focus:border-zinc-500"
+              className="w-full resize-y rounded-lg border border-zinc-300 bg-white px-4 py-3 font-mono text-xs leading-relaxed text-zinc-800 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:focus:border-zinc-400"
             />
 
-            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-200/60 pt-4 dark:border-zinc-700/60">
-              <span className="text-xs text-zinc-400 dark:text-zinc-500">
+            <div className="flex flex-wrap items-center gap-4 border-t border-zinc-200 pt-4 dark:border-zinc-700">
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
                 {content.length.toLocaleString()} chars
               </span>
               <div className="ml-auto flex items-center gap-4">
@@ -1301,7 +1301,7 @@ function InviteHistorySection({
       />
 
       {loadError && (
-        <div className="mb-4 rounded-xl border border-red-200/60 bg-red-50/60 px-4 py-3 text-sm text-red-600 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-400">
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50/60 px-4 py-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/60 dark:text-red-400">
           {loadError}
         </div>
       )}
@@ -1310,7 +1310,7 @@ function InviteHistorySection({
       {!loading && !loadError && (
         <div className="mb-3 flex flex-wrap items-center gap-2">
           {/* Status filter tabs */}
-          <div className="flex rounded-lg border border-zinc-200/70 bg-zinc-50 dark:border-zinc-700/70 dark:bg-zinc-900">
+          <div className="flex rounded-lg border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             {(["all", "pending", "accepted", "revoked"] as StatusFilter[]).map((f) => (
               <button
                 key={f}
@@ -1318,7 +1318,7 @@ function InviteHistorySection({
                 className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors first:rounded-l-lg last:rounded-r-lg ${
                   statusFilter === f
                     ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                    : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                    : "text-zinc-600 hover:text-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100"
                 }`}
               >
                 {f === "all" ? "All" : STATUS_LABELS[f as InviteStatus]}{" "}
@@ -1341,7 +1341,7 @@ function InviteHistorySection({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search email…"
-            className="rounded-lg border border-zinc-200/70 bg-white px-3 py-1.5 text-xs text-zinc-700 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700/70 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-600 dark:focus:border-zinc-500 sm:w-44"
+            className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs text-zinc-700 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder-zinc-500 dark:focus:border-zinc-400 sm:w-44"
           />
         </div>
       )}
@@ -1354,11 +1354,11 @@ function InviteHistorySection({
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <p className="text-center text-xs text-zinc-400 dark:text-zinc-500 py-4">
+          <p className="text-center text-xs text-zinc-500 dark:text-zinc-400 py-4">
             {invitations.length === 0 ? "No invites sent yet." : "No invites match the current filter."}
           </p>
         ) : (
-          <div className="divide-y divide-zinc-200/60 dark:divide-zinc-700/60">
+          <div className="divide-y divide-zinc-200 dark:divide-zinc-700">
             {filtered.map((inv) => {
               const status = getInviteStatus(inv);
               const isRevoked = status === "revoked";
@@ -1377,7 +1377,7 @@ function InviteHistorySection({
                         {inv.email}
                       </span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
                       {/* Mode badges */}
                       {inv.allowed_modes.map((m) => (
                         <span
@@ -1411,7 +1411,7 @@ function InviteHistorySection({
                     <button
                       onClick={() => handleCopyLink(inv)}
                       disabled={isRevoked}
-                      className="rounded-lg border border-zinc-200 px-2.5 py-1 text-xs text-zinc-500 transition-colors hover:border-zinc-400 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
+                      className="rounded-lg border border-zinc-300 px-2.5 py-1 text-xs text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-600 dark:text-zinc-300 dark:hover:border-zinc-400 dark:hover:text-zinc-100"
                     >
                       {copiedId === inv.id ? "Copied ✓" : "Copy link"}
                     </button>
@@ -1420,7 +1420,7 @@ function InviteHistorySection({
                     <button
                       onClick={() => handleResend(inv)}
                       disabled={isRevoked || resendState === "loading"}
-                      className="rounded-lg border border-zinc-200 px-2.5 py-1 text-xs text-zinc-500 transition-colors hover:border-zinc-400 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
+                      className="rounded-lg border border-zinc-300 px-2.5 py-1 text-xs text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-800 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-600 dark:text-zinc-300 dark:hover:border-zinc-400 dark:hover:text-zinc-100"
                     >
                       {resendState === "loading" ? "Sending…" : resendState === "done" ? "Sent ✓" : resendState === "error" ? "Failed" : "Resend"}
                     </button>
@@ -1430,7 +1430,7 @@ function InviteHistorySection({
                       <button
                         onClick={() => handleRevoke(inv)}
                         disabled={revokeState === "loading"}
-                        className="rounded-lg border border-red-200/60 px-2.5 py-1 text-xs text-red-500 transition-colors hover:border-red-400 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-red-900/60 dark:text-red-500 dark:hover:border-red-700 dark:hover:text-red-400"
+                        className="rounded-lg border border-red-300 px-2.5 py-1 text-xs text-red-600 transition-colors hover:border-red-400 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-40 dark:border-red-800 dark:text-red-400 dark:hover:border-red-600 dark:hover:text-red-300"
                       >
                         {revokeState === "loading" ? "Revoking…" : "Revoke"}
                       </button>
@@ -1470,13 +1470,13 @@ function AdminControls({ token, onLogout }: { token: string; onLogout: () => voi
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">Admin</h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             Owner-only controls for managing LaudBot&apos;s behaviour.
           </p>
         </div>
         <button
           onClick={onLogout}
-          className="mt-1 rounded-lg border border-zinc-200 px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-800 dark:text-zinc-500 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+          className="mt-1 rounded-lg border border-zinc-300 px-3 py-1.5 text-xs text-zinc-500 transition-colors hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-600 dark:text-zinc-400 dark:hover:border-zinc-400 dark:hover:text-zinc-200"
         >
           Sign out
         </button>
@@ -1506,8 +1506,8 @@ function AdminControls({ token, onLogout }: { token: string; onLogout: () => voi
             },
           ].map(({ title, description }) => (
             <Card key={title}>
-              <h3 className="mb-1.5 text-sm font-medium text-zinc-400 dark:text-zinc-500">{title}</h3>
-              <p className="text-xs leading-relaxed text-zinc-400 dark:text-zinc-500">{description}</p>
+              <h3 className="mb-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400">{title}</h3>
+              <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">{description}</p>
             </Card>
           ))}
         </div>
