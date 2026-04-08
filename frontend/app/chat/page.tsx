@@ -319,20 +319,32 @@ export default function ChatPage() {
         mt-[57px] sm:mt-0
       `}>
         <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
-          <span className="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+          <span className="text-xs font-semibold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
             History
           </span>
-          <button
-            onClick={handleNewConversation}
-            className="rounded-md px-2 py-1 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-          >
-            + New
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleNewConversation}
+              className="rounded-md px-2 py-1 text-xs font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+            >
+              + New
+            </button>
+            {/* Close button — mobile only */}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="sm:hidden rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+              aria-label="Close history"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M2 2L12 12M12 2L2 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto">
           {conversations.length === 0 && !historyLoading && (
-            <p className="px-4 py-6 text-center text-xs text-zinc-300 dark:text-zinc-600">
+            <p className="px-4 py-6 text-center text-xs text-zinc-400 dark:text-zinc-500">
               No past conversations
             </p>
           )}
@@ -351,14 +363,14 @@ export default function ChatPage() {
                 }`}
               >
                 <div className="mb-1 flex items-center gap-2">
-                  <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-medium ${badgeStyle}`}>
+                  <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${badgeStyle}`}>
                     {MODE_LABELS[conv.mode] ?? conv.mode}
                   </span>
-                  <span className="text-[10px] text-zinc-300 dark:text-zinc-600">
+                  <span className="text-xs text-zinc-400 dark:text-zinc-500">
                     {formatRelativeDate(conv.started_at)}
                   </span>
                 </div>
-                <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="truncate text-xs text-zinc-600 dark:text-zinc-300">
                   {conv.preview}
                 </p>
               </button>
@@ -382,31 +394,31 @@ export default function ChatPage() {
           {/* Header row */}
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
-              {/* Mobile sidebar toggle */}
+              {/* Mobile sidebar toggle — clock icon, distinct from the nav hamburger */}
               <button
                 onClick={() => setSidebarOpen((v) => !v)}
-                className="sm:hidden rounded-md p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800"
+                className="sm:hidden rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
                 aria-label="Toggle history"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <rect y="2" width="16" height="1.5" rx="1" />
-                  <rect y="7.25" width="16" height="1.5" rx="1" />
-                  <rect y="12.5" width="16" height="1.5" rx="1" />
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1.75" y="2.75" width="12.5" height="10.5" rx="1.25" />
+                  <line x1="5.25" y1="2.75" x2="5.25" y2="13.25" />
                 </svg>
               </button>
               <div>
                 <h1 className="text-base font-semibold text-zinc-900 dark:text-white sm:text-lg">Chat</h1>
-                <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-400 sm:text-sm">
+                <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400 sm:text-sm">
                   Ask anything about Laud&apos;s background, projects, and experience.
                 </p>
               </div>
             </div>
 
-            {/* Mode selector + actions */}
-            <div className="flex flex-col gap-2 sm:items-end">
+            {/* Mode selector + actions — single row on mobile, stacked on desktop */}
+            <div className="flex w-full flex-row items-center gap-2 sm:w-auto sm:flex-col sm:items-end sm:gap-2">
               {activeMode && (
                 <div className="flex flex-row items-center gap-2 sm:flex-col sm:items-end sm:gap-1.5">
-                  <p className="text-xs text-zinc-400 dark:text-zinc-500">I am a…</p>
+                  {/* "I am a…" label — hidden on mobile to save space */}
+                  <p className="hidden sm:block text-xs text-zinc-500 dark:text-zinc-400">I am a…</p>
                   {canSwitchModes && allowedModes.length > 1 ? (
                     <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-zinc-700 dark:bg-zinc-800">
                       {allowedModes.map((mode) => (
@@ -416,7 +428,7 @@ export default function ChatPage() {
                           className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                             mode === activeMode
                               ? "bg-zinc-900 text-white dark:bg-zinc-700 dark:text-white"
-                              : "text-zinc-400 hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300"
+                              : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"
                           }`}
                         >
                           {MODE_LABELS[mode] ?? mode}
@@ -431,20 +443,28 @@ export default function ChatPage() {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 sm:self-end">
+              {/* Action buttons — pushed to the right of the row on mobile */}
+              <div className="ml-auto flex items-center gap-1.5 sm:ml-0 sm:gap-2 sm:self-end">
                 {messages.length > 0 && (
                   <button
                     onClick={handleNewConversation}
-                    className="text-xs text-zinc-400 transition-colors hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300"
+                    className="text-xs text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"
                   >
                     + New Chat
                   </button>
                 )}
                 <button
                   onClick={handleLogout}
-                  className="rounded-md border border-zinc-200 px-3 py-1 text-xs text-zinc-400 transition-colors hover:border-zinc-400 hover:text-zinc-700 dark:border-zinc-800 dark:text-zinc-500 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
+                  aria-label="Exit"
+                  className="flex items-center rounded-md border border-zinc-300 p-1.5 text-zinc-500 transition-colors hover:border-zinc-500 hover:text-zinc-700 dark:border-zinc-600 dark:text-zinc-400 dark:hover:border-zinc-400 dark:hover:text-zinc-200 sm:px-3 sm:py-1"
                 >
-                  Exit
+                  {/* Exit-door icon on mobile, text on desktop */}
+                  <svg className="sm:hidden" width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5.5 3H2.5V12H5.5" />
+                    <path d="M9 10.5L12.5 7.5L9 4.5" />
+                    <path d="M5.5 7.5H12.5" />
+                  </svg>
+                  <span className="hidden sm:inline text-xs">Exit</span>
                 </button>
               </div>
             </div>
@@ -482,7 +502,7 @@ export default function ChatPage() {
           )}
 
           {/* Message area */}
-          <div className={`messages-scroll mb-3 flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto rounded-xl border border-zinc-200/60 bg-zinc-50/50 p-4 transition-opacity duration-200 dark:border-zinc-700/60 dark:bg-zinc-800/50 ${switchConfirm ? "pointer-events-none opacity-30" : ""}`}>
+          <div className={`messages-scroll mb-3 flex flex-1 min-h-0 flex-col gap-4 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 transition-opacity duration-200 dark:border-zinc-700 dark:bg-zinc-800/50 ${switchConfirm ? "pointer-events-none opacity-30" : ""}`}>
 
             {historyLoading && (
               <div className="flex flex-1 items-center justify-center">
@@ -549,7 +569,7 @@ export default function ChatPage() {
                   const isLong = msg.content.length > COLLAPSE_THRESHOLD;
                   const isExpanded = expandedMessages.has(i);
                   return (
-                    <div className="max-w-[92%] rounded-2xl rounded-bl-sm border border-zinc-200/70 bg-white px-4 py-3 text-sm leading-relaxed text-zinc-800 dark:border-zinc-700/40 dark:bg-zinc-800/80 dark:text-zinc-100 sm:max-w-[85%]">
+                    <div className="max-w-[92%] rounded-2xl rounded-bl-sm border border-zinc-200 bg-white px-4 py-3 text-sm leading-relaxed text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-100 sm:max-w-[85%]">
                       <div className={`relative ${isLong && !isExpanded ? "max-h-[180px] overflow-hidden" : ""}`}>
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
@@ -577,7 +597,7 @@ export default function ChatPage() {
                       {isLong && (
                         <button
                           onClick={() => toggleExpanded(i)}
-                          className="mt-2 text-xs text-zinc-400 transition-colors hover:text-zinc-700 dark:text-zinc-500 dark:hover:text-zinc-300"
+                          className="mt-2 text-xs text-zinc-500 transition-colors hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
                         >
                           {isExpanded ? "Show less ↑" : "TL;DR ↓"}
                         </button>
@@ -587,7 +607,7 @@ export default function ChatPage() {
                 })()}
 
                 {msg.role === "assistant" && msg.provider && (
-                  <span className="ml-1 text-xs text-zinc-400 dark:text-zinc-500">
+                  <span className="ml-1 text-xs text-zinc-500 dark:text-zinc-400">
                     {msg.provider} · {msg.model}
                   </span>
                 )}
@@ -596,7 +616,7 @@ export default function ChatPage() {
 
             {loading && (
               <div className="animate-fade-in flex items-start">
-                <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-zinc-200/70 bg-white px-4 py-3 dark:border-zinc-700/40 dark:bg-zinc-800/80">
+                <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/80">
                   <span className="typing-dot" />
                   <span className="typing-dot" />
                   <span className="typing-dot" />
