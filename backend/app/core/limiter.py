@@ -1,50 +1,89 @@
-"""Rate limiter configuration.
+"""Rate limiter — sliding-window in-memory implementation as a FastAPI Depends.
 
-Uses slowapi (Starlette wrapper around limits) with a custom key function
-that identifies requests by visitor_id from the JWT rather than by IP address.
-Keying by visitor_id is correct here — visitors may share IPs (corporate NAT,
-etc.) but the JWT uniquely identifies the session.
+Using a FastAPI dependency (rather than a slowapi decorator) avoids an
+incompatibility where the decorator wrapper breaks FastAPI's Pydantic body
+parameter introspection, causing the request body to be misidentified as a
+query parameter and returning a 422 error.
 
-Falls back to the client IP if the JWT is absent or unparseable (e.g. on
-unauthenticated requests, which the route guard will reject anyway).
+Configuration:
+    RATE_LIMIT_CHAT env var (default ``20/minute``).
+    Format: ``<count>/<unit>`` where unit is ``second``, ``minute``, or ``hour``.
 """
 from __future__ import annotations
 
 import os
+import time
+from collections import defaultdict
 
-import jwt
-from slowapi import Limiter
+from fastapi import Depends, HTTPException
 from starlette.requests import Request
 
-# Default: 20 messages per visitor per minute.
-RATE_LIMIT_CHAT = os.environ.get("RATE_LIMIT_CHAT", "20/minute")
+from app.core.dependencies import get_current_visitor
+
+_RATE_LIMIT_CHAT = os.environ.get("RATE_LIMIT_CHAT", "20/minute")
+
+_UNIT_SECONDS: dict[str, float] = {
+    "second": 1.0,
+    "minute": 60.0,
+    "hour": 3600.0,
+}
 
 
-def _visitor_id_key(request: Request) -> str:
-    """Extract visitor_id from the Bearer JWT for rate-limit keying.
+def _parse_rate_limit(spec: str) -> tuple[int, float]:
+    """Parse a ``<count>/<unit>`` rate-limit spec into (max_requests, window_seconds).
 
     Args:
-        request: Incoming Starlette request.
+        spec: Rate limit string, e.g. ``"20/minute"``.
 
     Returns:
-        The visitor_id string from the JWT sub claim, or the client IP
-        as a fallback if the token is missing or cannot be decoded.
+        Tuple of (max_requests, window_seconds).
+
+    Raises:
+        ValueError: If the spec is not parseable.
     """
-    auth: str = request.headers.get("Authorization", "")
-    if auth.startswith("Bearer "):
-        token = auth.removeprefix("Bearer ")
-        try:
-            # Decode without verification — we only need the sub claim for
-            # the key function. Actual signature verification happens in the
-            # FastAPI dependency (get_current_visitor).
-            payload = jwt.decode(token, options={"verify_signature": False})
-            visitor_id: str | None = payload.get("sub")
-            if visitor_id:
-                return visitor_id
-        except Exception:  # noqa: BLE001
-            pass
-    # Fallback: client IP (handles unauthenticated requests gracefully).
-    return request.client.host if request.client else "unknown"
+    try:
+        count_str, unit = spec.strip().split("/")
+        return int(count_str), _UNIT_SECONDS[unit.lower().rstrip("s")]
+    except (ValueError, KeyError) as exc:
+        raise ValueError(f"Invalid RATE_LIMIT_CHAT spec: {spec!r}") from exc
 
 
-limiter = Limiter(key_func=_visitor_id_key)
+_MAX_REQUESTS, _WINDOW_SECONDS = _parse_rate_limit(_RATE_LIMIT_CHAT)
+
+# visitor_id → list of request timestamps (monotonic clock)
+_request_log: dict[str, list[float]] = defaultdict(list)
+
+
+async def chat_rate_limit(
+    request: Request,
+    visitor: dict = Depends(get_current_visitor),
+) -> None:
+    """FastAPI dependency that enforces a per-visitor sliding-window rate limit.
+
+    Args:
+        request: Incoming Starlette request (unused directly; required for Depends chain).
+        visitor: Decoded visitor JWT payload — provides the visitor_id key.
+
+    Raises:
+        HTTPException 429: When the visitor exceeds the configured request rate.
+    """
+    visitor_id: str = visitor["sub"]
+    now = time.monotonic()
+    window_start = now - _WINDOW_SECONDS
+
+    # Evict timestamps outside the current window.
+    _request_log[visitor_id] = [
+        t for t in _request_log[visitor_id] if t > window_start
+    ]
+
+    if len(_request_log[visitor_id]) >= _MAX_REQUESTS:
+        unit = next(k for k, v in _UNIT_SECONDS.items() if v == _WINDOW_SECONDS)
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                f"Rate limit exceeded. You can send {_MAX_REQUESTS} messages "
+                f"per {unit}. Please wait before sending another message."
+            ),
+        )
+
+    _request_log[visitor_id].append(now)
