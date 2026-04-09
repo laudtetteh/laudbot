@@ -16,9 +16,8 @@ import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy import select
 
 from app.api.admin_config import router as admin_config_router
 from app.api.admin_modes import router as admin_modes_router
@@ -27,10 +26,8 @@ from app.api.chat import router as chat_router
 from app.api.health import router as health_router
 from app.db.base import AsyncSessionLocal
 from app.db.models import ModeConfig, SystemConfig
-from app.core.limiter import limiter
 from app.services.llm.base import DEFAULT_MODELS, MODES, LLMConfig
 from app.services.prompt import load_mode_overlay, load_mode_prompts
-from sqlalchemy import select
 
 
 def _run_migrations() -> None:
@@ -103,10 +100,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="api", lifespan=lifespan)
-
-# Rate limiter — attach to app state and register the 429 handler.
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Active LLM config — held in memory, resets on restart.
 # Defaults to Claude with the standard default model.
