@@ -5,6 +5,38 @@
 
 ---
 
+## 2026-04-08 — feat(auth,chat): configurable visitor JWT expiry + rate limiting (PR #96, closes #94 #95)
+
+- `VISITOR_JWT_EXPIRE_HOURS` env var (default: `168` / 7 days) replaces hardcoded `7 * 24` in `accept_invite`
+- `slowapi==0.1.9` added to `requirements.txt`
+- `backend/app/core/limiter.py`: `Limiter` with custom key function extracting `visitor_id` from JWT (falls back to client IP)
+- `@limiter.limit(RATE_LIMIT_CHAT)` on `POST /api/chat`; 429 handler registered in `main.py`
+- `RATE_LIMIT_CHAT` env var (default: `20/minute`) — any `limits`-compatible string
+- Both vars documented in `.env.example`, set in DO
+
+---
+
+## 2026-04-08 — fix(ui): mobile header layout, sidebar close + distinct toggle icon (PR #93, closes #92)
+
+- Chat header collapses from 3 rows to 1 row on mobile: mode pills + actions in single flex row, `ml-auto` pushes actions right
+- "I am a…" label hidden on mobile, visible on desktop
+- "+ New Chat" restored as text button; Exit uses door SVG icon on mobile, "Exit" text on desktop
+- Sidebar toggle icon: hamburger ≡ → panel-left split-rectangle (standard sidebar toggle symbol)
+- ✕ close button added inside sidebar header (mobile only)
+
+---
+
+## 2026-04-08 — style(ui): font size bump + contrast improvements across all pages (in PR #93)
+
+- `html { font-size: 17px }` in `globals.css` — all rem-based Tailwind classes scale up uniformly
+- Hardcoded `text-[10px]` in chat sidebar → `text-xs` (now scales with root font size)
+- Opacity modifiers removed from borders throughout (`/60`, `/70`, `/40` → solid)
+- Secondary text lifted: `zinc-400` → `zinc-500/600` on light, `zinc-500/600` → `zinc-400` on dark
+- Input/form borders: `zinc-300/60` → `zinc-300` (light), `zinc-700/60` → `zinc-600` (dark)
+- Applied to: `chat/page.tsx`, `admin/page.tsx`, `invite/page.tsx`, `page.tsx`
+
+---
+
 ## 2026-04-07 — feat(content): env var + file fallback for overlays and suggested prompts (PR #91, closes #90)
 
 - `load_mode_overlay()` now checks `OVERLAY_{MODE}` env var before file fallback — prod parity without gitignored files
